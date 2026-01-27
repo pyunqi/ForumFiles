@@ -61,25 +61,12 @@ const Dashboard: React.FC = () => {
             </p>
           </div>
           <div className="dashboard-actions">
-            {isAuthenticated ? (
-              <>
-                <Link to="/upload" className="btn-primary">
-                  Upload File
-                </Link>
-                <Link to="/my-files" className="btn-secondary">
-                  My Files
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="btn-primary">
-                  Login
-                </Link>
-                <Link to="/register" className="btn-secondary">
-                  Register
-                </Link>
-              </>
-            )}
+            <Link to="/upload" className="btn-primary">
+              Upload File
+            </Link>
+            <Link to="/my-files" className="btn-secondary">
+              My Files
+            </Link>
           </div>
         </div>
 

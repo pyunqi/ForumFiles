@@ -25,23 +25,9 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-            {/* Protected routes - require login */}
-            <Route
-              path="/upload"
-              element={
-                <ProtectedRoute>
-                  <UploadPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-files"
-              element={
-                <ProtectedRoute>
-                  <MyFiles />
-                </ProtectedRoute>
-              }
-            />
+            {/* Upload and My Files - handle auth inline */}
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/my-files" element={<MyFiles />} />
 
             {/* Admin route - require admin login */}
             <Route
