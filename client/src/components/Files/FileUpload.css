@@ -1,0 +1,135 @@
+.file-upload-container {
+  margin-bottom: 2rem;
+}
+
+.file-upload-dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: 0.75rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #f9fafb;
+}
+
+.file-upload-dropzone:hover:not(.uploading) {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.file-upload-dropzone.active {
+  border-color: #2563eb;
+  background-color: #dbeafe;
+}
+
+.file-upload-dropzone.uploading {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dropzone-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.dropzone-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.dropzone-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.upload-progress-list {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upload-progress-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-filename {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.progress-status {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-uploading {
+  color: #2563eb;
+}
+
+.status-success {
+  color: #22c55e;
+}
+
+.status-error {
+  color: #ef4444;
+}
+
+.progress-bar {
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+.progress-uploading {
+  background-color: #2563eb;
+}
+
+.progress-success {
+  background-color: #22c55e;
+}
+
+.progress-error {
+  background-color: #ef4444;
+}
+
+.progress-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .file-upload-dropzone {
+    padding: 2rem 1rem;
+  }
+
+  .dropzone-icon {
+    font-size: 2.5rem;
+  }
+
+  .dropzone-title {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,32 @@
+name: forumfiles
+
+services:
+  # Backend Node.js service
+  backend:
+    build:
+      path: ./server
+      buildCommand: npm install && npm run build
+    start: npm start
+    env:
+      NODE_ENV: production
+      PORT: 3000
+    volumes:
+      - /data
+    healthCheck:
+      path: /api/health
+      interval: 30
+      timeout: 10
+
+  # Frontend static service
+  frontend:
+    build:
+      path: ./client
+      buildCommand: npm install && npm run build
+      outputDir: dist
+    env:
+      VITE_API_URL: ${BACKEND_URL}
+
+# Volume configuration for persistent storage
+volumes:
+  data:
+    mountPath: /data
