@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import path from 'path';
-import { fileTypeFromBuffer } from 'file-type';
 
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '104857600'); // 100MB
 
@@ -63,6 +62,7 @@ export async function validateFile(
     }
 
     // 2. Check file type using magic numbers
+    const { fileTypeFromBuffer } = await import('file-type');
     const fileType = await fileTypeFromBuffer(buffer);
 
     // For text files and some archives, file-type may not detect them
