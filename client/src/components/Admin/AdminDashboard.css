@@ -65,6 +65,83 @@
 .section-header h2 {
   font-size: 1.5rem;
   color: #1a1a1a;
+  margin: 0;
+}
+
+.section-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+/* Upload Form */
+.upload-form {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.upload-form h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.form-row .form-group {
+  margin-bottom: 0;
+}
+
+.form-row .flex-grow {
+  flex: 1;
+}
+
+.btn-upload {
+  padding: 0.75rem 2rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-upload:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-upload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-progress-bar {
+  margin-top: 1rem;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.upload-progress-bar .progress-fill {
+  height: 100%;
+  background: #2563eb;
+  transition: width 0.3s;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
 }
 
 .search-box {
@@ -102,7 +179,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 0.8fr 1fr 1fr 1.2fr 1.5fr;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 1rem;
   padding: 1rem;
   background: #f8f9fa;
@@ -121,7 +198,7 @@
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 0.8fr 1fr 1fr 1.2fr 1.5fr;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 1rem;
   padding: 1rem;
   background: white;
@@ -213,8 +290,7 @@
 }
 
 .btn-share,
-.btn-link,
-.btn-delete {
+.btn-link {
   background: #f3f4f6;
   font-size: 1.2rem;
   padding: 0.4rem 0.8rem;
@@ -228,8 +304,14 @@
   background: #dbeafe;
 }
 
-.btn-delete:hover {
+.btn-delete {
   background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.85rem;
+}
+
+.btn-delete:hover {
+  background: #fecaca;
 }
 
 .pagination {

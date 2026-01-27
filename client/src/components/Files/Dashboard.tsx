@@ -1,31 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { getMyFiles, FileInfo } from '../../api/files';
-import FileUpload from './FileUpload';
-import FileList from './FileList';
+import { getPublicFiles, downloadPublicFile, PublicFileInfo } from '../../api/files';
+import { formatFileSize, formatDate } from '../../utils/formatters';
 import Loading from '../Common/Loading';
 import Header from '../Common/Header';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { showError } = useToast();
-  const [files, setFiles] = useState<FileInfo[]>([]);
+  const { showError, showSuccess } = useToast();
+  const [files, setFiles] = useState<PublicFileInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [downloading, setDownloading] = useState<number | null>(null);
 
   useEffect(() => {
-    loadFiles();
-  }, [page]);
+    loadPublicFiles();
+  }, []);
 
-  const loadFiles = async () => {
+  const loadPublicFiles = async () => {
     setLoading(true);
     try {
-      const response = await getMyFiles(page, 20);
+      const response = await getPublicFiles();
       setFiles(response.files);
-      setTotalPages(response.pagination.totalPages);
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Failed to load files');
     } finally {
@@ -33,8 +31,20 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  if (loading && page === 1) {
-    return <Loading fullScreen message="Loading your files..." />;
+  const handleDownload = async (file: PublicFileInfo) => {
+    setDownloading(file.id);
+    try {
+      await downloadPublicFile(file.id, file.filename);
+      showSuccess('Download started');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Download failed');
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  if (loading) {
+    return <Loading fullScreen message="Loading files..." />;
   }
 
   return (
@@ -43,54 +53,55 @@ const Dashboard: React.FC = () => {
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div>
-            <h1>My Files</h1>
+            <h1>File Downloads</h1>
             <p className="dashboard-subtitle">
-              Welcome back, {user?.email}
+              Welcome, {user?.email}
             </p>
           </div>
-          <div className="dashboard-stats">
-            <div className="stat-card">
-              <div className="stat-value">{files.length}</div>
-              <div className="stat-label">Files</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">
-                {files.reduce((sum, f) => sum + f.downloadCount, 0)}
-              </div>
-              <div className="stat-label">Downloads</div>
-            </div>
+          <div className="dashboard-actions">
+            <Link to="/upload" className="btn-primary">
+              Upload File
+            </Link>
+            <Link to="/my-files" className="btn-secondary">
+              My Files
+            </Link>
           </div>
         </div>
 
-        <FileUpload onUploadComplete={loadFiles} />
-
-        <FileList
-          files={files}
-          onFileDeleted={loadFiles}
-          showActions={true}
-        />
-
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="btn-pagination"
-            >
-              Previous
-            </button>
-            <span className="page-info">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="btn-pagination"
-            >
-              Next
-            </button>
-          </div>
-        )}
+        <div className="files-section">
+          <h2>Available Downloads</h2>
+          {files.length === 0 ? (
+            <div className="empty-state">
+              <p>No files available for download yet.</p>
+            </div>
+          ) : (
+            <div className="public-files-list">
+              {files.map((file) => (
+                <div key={file.id} className="public-file-card">
+                  <div className="file-icon">📄</div>
+                  <div className="file-info">
+                    <h3 className="file-name">{file.filename}</h3>
+                    {file.description && (
+                      <p className="file-description">{file.description}</p>
+                    )}
+                    <div className="file-meta">
+                      <span className="file-size">{formatFileSize(file.fileSize)}</span>
+                      <span className="file-date">{formatDate(file.createdAt)}</span>
+                      <span className="file-downloads">{file.downloadCount} downloads</span>
+                    </div>
+                  </div>
+                  <button
+                    className="btn-download"
+                    onClick={() => handleDownload(file)}
+                    disabled={downloading === file.id}
+                  >
+                    {downloading === file.id ? 'Downloading...' : 'Download'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

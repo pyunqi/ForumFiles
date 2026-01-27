@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
-import { getQuery, runQuery, allQuery } from '../models/db';
+import { db, getQuery, runQuery, allQuery } from '../models/db';
 import { sendFileShare, sendPublicLinkNotification } from '../services/emailService';
+import { validateFile } from '../utils/fileValidator';
 
 interface User {
   id: number;
@@ -320,5 +322,122 @@ export async function generatePublicLink(req: Request, res: Response) {
   } catch (error) {
     console.error('Generate public link error:', error);
     res.status(500).json({ error: 'Failed to generate public link' });
+  }
+}
+
+// Upload public file (for users to download)
+export async function uploadPublicFile(req: Request, res: Response) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { description } = req.body;
+    const filePath = req.file.path;
+    const fileBuffer = fs.readFileSync(filePath);
+
+    // Validate file
+    const validation = await validateFile(fileBuffer, req.file.originalname);
+    if (!validation.isValid) {
+      fs.unlinkSync(filePath);
+      return res.status(400).json({ error: validation.error });
+    }
+
+    // Insert file record with is_public = 1
+    const result = await new Promise<number>((resolve, reject) => {
+      db.run(
+        `INSERT INTO files (user_id, filename, original_filename, description, file_path, file_size, mime_type, file_hash, is_public)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+        [
+          req.user!.userId,
+          req.file!.filename,
+          validation.sanitizedFilename,
+          description || '',
+          filePath,
+          validation.size,
+          validation.mimeType,
+          validation.hash
+        ],
+        function(err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        }
+      );
+    });
+
+    res.json({
+      message: 'Public file uploaded successfully',
+      file: {
+        id: result,
+        filename: validation.sanitizedFilename,
+        description: description || '',
+        fileSize: validation.size,
+        mimeType: validation.mimeType
+      }
+    });
+  } catch (error) {
+    console.error('Upload public file error:', error);
+    res.status(500).json({ error: 'Failed to upload file' });
+  }
+}
+
+// Get all public files (admin view)
+export async function getPublicFiles(req: Request, res: Response) {
+  try {
+    const files = await allQuery<any>(
+      `SELECT f.*, u.email as user_email
+       FROM files f
+       JOIN users u ON f.user_id = u.id
+       WHERE f.is_deleted = 0 AND f.is_public = 1
+       ORDER BY f.created_at DESC`
+    );
+
+    res.json({
+      files: files.map(file => ({
+        id: file.id,
+        filename: file.original_filename,
+        description: file.description,
+        fileSize: file.file_size,
+        mimeType: file.mime_type,
+        downloadCount: file.download_count,
+        createdAt: file.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Get public files error:', error);
+    res.status(500).json({ error: 'Failed to get public files' });
+  }
+}
+
+// Delete public file
+export async function deletePublicFile(req: Request, res: Response) {
+  try {
+    const fileId = parseInt(req.params.id);
+
+    // Get file record
+    const file = await getQuery<FileRecord>(
+      'SELECT * FROM files WHERE id = ? AND is_deleted = 0 AND is_public = 1',
+      [fileId]
+    );
+
+    if (!file) {
+      return res.status(404).json({ error: 'Public file not found' });
+    }
+
+    // Soft delete
+    await runQuery(
+      'UPDATE files SET is_deleted = 1 WHERE id = ?',
+      [fileId]
+    );
+
+    // Delete physical file
+    if (fs.existsSync(file.file_path)) {
+      fs.unlinkSync(file.file_path);
+    }
+
+    res.json({ message: 'Public file deleted successfully' });
+  } catch (error) {
+    console.error('Delete public file error:', error);
+    res.status(500).json({ error: 'Failed to delete file' });
   }
 }

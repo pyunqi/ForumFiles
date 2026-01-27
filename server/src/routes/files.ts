@@ -7,12 +7,18 @@ import {
   getMyFiles,
   downloadFile,
   deleteFile,
-  getFileDetails
+  getFileDetails,
+  getPublicFiles,
+  downloadPublicFile
 } from '../controllers/fileController';
 
 const router = express.Router();
 
-// All routes require authentication
+// Public files routes (require authentication but not ownership)
+router.get('/public', authMiddleware, getPublicFiles);
+router.get('/public/:id/download', authMiddleware, downloadPublicFile);
+
+// User's own files routes (require authentication)
 router.use(authMiddleware);
 
 // Cast multer middleware to fix type compatibility issue between @types/multer and @types/express

@@ -14,6 +14,20 @@ export interface FileInfo {
   };
 }
 
+export interface PublicFileInfo {
+  id: number;
+  filename: string;
+  description: string;
+  fileSize: number;
+  mimeType: string;
+  downloadCount: number;
+  createdAt: string;
+}
+
+export interface GetPublicFilesResponse {
+  files: PublicFileInfo[];
+}
+
 export interface UploadFileResponse {
   message: string;
   file: FileInfo;
@@ -89,4 +103,27 @@ export const downloadFile = async (fileId: number): Promise<Blob> => {
 export const getFileDetails = async (fileId: number): Promise<FileInfo> => {
   const response = await request.get<{ file: FileInfo }>(`/files/${fileId}`);
   return response.data.file;
+};
+
+// Get public files (files shared by admin for all users)
+export const getPublicFiles = async (): Promise<GetPublicFilesResponse> => {
+  const response = await request.get<GetPublicFilesResponse>('/files/public');
+  return response.data;
+};
+
+// Download public file
+export const downloadPublicFile = async (fileId: number, filename: string): Promise<void> => {
+  const response = await request.get(`/files/public/${fileId}/download`, {
+    responseType: 'blob',
+  });
+
+  // Create download link
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 };

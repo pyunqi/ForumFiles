@@ -24,6 +24,112 @@
   font-size: 1rem;
 }
 
+.dashboard-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.dashboard-actions .btn-primary,
+.dashboard-actions .btn-secondary {
+  text-decoration: none;
+}
+
+.files-section {
+  margin-top: 2rem;
+}
+
+.files-section h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #6b7280;
+}
+
+.public-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.public-file-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.public-file-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.public-file-card .file-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.public-file-card .file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.public-file-card .file-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-file-card .file-description {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+  line-height: 1.4;
+}
+
+.public-file-card .file-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.btn-download {
+  padding: 0.75rem 1.5rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-download:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-download:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .dashboard-stats {
   display: flex;
   gap: 1rem;

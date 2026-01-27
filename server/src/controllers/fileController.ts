@@ -266,3 +266,66 @@ export async function getFileDetails(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to get file details' });
   }
 }
+
+// Get public files (for users to download)
+export async function getPublicFiles(req: Request, res: Response) {
+  try {
+    const files = await allQuery<FileRecord>(
+      `SELECT id, original_filename, description, file_size, mime_type, download_count, created_at
+       FROM files
+       WHERE is_deleted = 0 AND is_public = 1
+       ORDER BY created_at DESC`
+    );
+
+    res.json({
+      files: files.map(file => ({
+        id: file.id,
+        filename: file.original_filename,
+        description: file.description,
+        fileSize: file.file_size,
+        mimeType: file.mime_type,
+        downloadCount: file.download_count,
+        createdAt: file.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Get public files error:', error);
+    res.status(500).json({ error: 'Failed to get public files' });
+  }
+}
+
+// Download public file
+export async function downloadPublicFile(req: Request, res: Response) {
+  try {
+    const fileId = parseInt(req.params.id);
+
+    // Get file record
+    const file = await getQuery<FileRecord>(
+      'SELECT * FROM files WHERE id = ? AND is_deleted = 0 AND is_public = 1',
+      [fileId]
+    );
+
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Check if file exists on disk
+    if (!fs.existsSync(file.file_path)) {
+      return res.status(404).json({ error: 'File not found on server' });
+    }
+
+    // Increment download count
+    await runQuery(
+      'UPDATE files SET download_count = download_count + 1 WHERE id = ?',
+      [fileId]
+    );
+
+    // Send file
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.original_filename)}"`);
+    res.setHeader('Content-Type', file.mime_type);
+    res.sendFile(path.resolve(file.file_path));
+  } catch (error) {
+    console.error('Download public file error:', error);
+    res.status(500).json({ error: 'Download failed' });
+  }
+}

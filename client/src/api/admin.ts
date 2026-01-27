@@ -103,3 +103,45 @@ export const generatePublicLink = async (
   );
   return response.data;
 };
+
+// Upload public file (for users to download)
+export const uploadPublicFile = async (
+  file: File,
+  description: string,
+  onProgress?: (progress: number) => void
+): Promise<{ message: string }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('description', description);
+
+  const response = await request.post<{ message: string }>(
+    '/admin/upload-public',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onProgress) {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          onProgress(percentCompleted);
+        }
+      },
+    }
+  );
+
+  return response.data;
+};
+
+// Get public files list (admin view)
+export const getPublicFilesAdmin = async (): Promise<GetFilesResponse> => {
+  const response = await request.get<GetFilesResponse>('/admin/public-files');
+  return response.data;
+};
+
+// Delete public file
+export const deletePublicFile = async (fileId: number): Promise<void> => {
+  await request.delete(`/admin/public-files/${fileId}`);
+};

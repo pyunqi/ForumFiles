@@ -59,12 +59,18 @@ export function initializeDatabase(): Promise<void> {
           file_hash VARCHAR(64) NOT NULL,
           download_count INTEGER DEFAULT 0,
           is_deleted BOOLEAN DEFAULT 0,
+          is_public BOOLEAN DEFAULT 0,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `, (err) => {
         if (err) console.error('Error creating files table:', err.message);
+      });
+
+      // Add is_public column if it doesn't exist (migration)
+      db.run(`ALTER TABLE files ADD COLUMN is_public BOOLEAN DEFAULT 0`, (err) => {
+        // Ignore error if column already exists
       });
 
       // Create indexes for files table
