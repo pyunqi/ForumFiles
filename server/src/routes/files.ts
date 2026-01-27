@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { uploadMiddleware } from '../middleware/upload';
 import { uploadLimiter } from '../middleware/rateLimiter';
@@ -15,7 +15,8 @@ const router = express.Router();
 // All routes require authentication
 router.use(authMiddleware);
 
-router.post('/upload', uploadLimiter, uploadMiddleware.single('file'), uploadFile);
+// Cast multer middleware to fix type compatibility issue between @types/multer and @types/express
+router.post('/upload', uploadLimiter, uploadMiddleware.single('file') as unknown as RequestHandler, uploadFile);
 router.get('/my-files', getMyFiles);
 router.get('/:id', getFileDetails);
 router.get('/:id/download', downloadFile);
