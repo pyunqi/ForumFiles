@@ -16,17 +16,16 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <Routes>
+            {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/public/:linkCode" element={<PublicDownload />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+
+            {/* Dashboard - public, no login required */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Protected routes - require login */}
             <Route
               path="/upload"
               element={
@@ -43,6 +42,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Admin route - require admin login */}
             <Route
               path="/admin"
               element={
@@ -51,7 +52,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

@@ -9,7 +9,7 @@ import Header from '../Common/Header';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { showError, showSuccess } = useToast();
   const [files, setFiles] = useState<PublicFileInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,9 @@ const Dashboard: React.FC = () => {
       const response = await getPublicFiles();
       setFiles(response.files);
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to load files');
+      // Don't show error for public files - just show empty state
+      console.error('Failed to load files:', error);
+      setFiles([]);
     } finally {
       setLoading(false);
     }
@@ -55,16 +57,29 @@ const Dashboard: React.FC = () => {
           <div>
             <h1>File Downloads</h1>
             <p className="dashboard-subtitle">
-              Welcome, {user?.email}
+              {isAuthenticated ? `Welcome, ${user?.email}` : 'Download available files'}
             </p>
           </div>
           <div className="dashboard-actions">
-            <Link to="/upload" className="btn-primary">
-              Upload File
-            </Link>
-            <Link to="/my-files" className="btn-secondary">
-              My Files
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/upload" className="btn-primary">
+                  Upload File
+                </Link>
+                <Link to="/my-files" className="btn-secondary">
+                  My Files
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="btn-primary">
+                  Login
+                </Link>
+                <Link to="/register" className="btn-secondary">
+                  Register
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

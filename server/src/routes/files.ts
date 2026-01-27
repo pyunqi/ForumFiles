@@ -14,9 +14,9 @@ import {
 
 const router = express.Router();
 
-// Public files routes (require authentication but not ownership)
-router.get('/public', authMiddleware, getPublicFiles);
-router.get('/public/:id/download', authMiddleware, downloadPublicFile);
+// Public files routes - NO authentication required
+router.get('/public', getPublicFiles);
+router.get('/public/:id/download', downloadPublicFile);
 
 // User's own files routes (require authentication)
 router.use(authMiddleware);
