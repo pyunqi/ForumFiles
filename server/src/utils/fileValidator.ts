@@ -62,8 +62,8 @@ export async function validateFile(
     }
 
     // 2. Check file type using magic numbers
-    const { fileTypeFromBuffer } = await import('file-type');
-    const fileType = await fileTypeFromBuffer(buffer);
+    const fileTypeModule = await import('file-type');
+    const fileType = await fileTypeModule.fileTypeFromBuffer(buffer);
 
     // For text files and some archives, file-type may not detect them
     // Allow based on extension if fileType is undefined
