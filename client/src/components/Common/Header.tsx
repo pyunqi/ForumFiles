@@ -38,7 +38,7 @@ const Header: React.FC = () => {
                 </Link>
               )}
               <div className="user-menu">
-                <span className="user-name">{user?.username}</span>
+                <span className="user-name">{user?.email}</span>
                 <button onClick={handleLogout} className="btn-logout">
                   Logout
                 </button>

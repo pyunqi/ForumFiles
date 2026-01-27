@@ -1,5 +1,5 @@
 import request from './request';
-import { FileInfo, GetFilesResponse } from './files';
+import { GetFilesResponse } from './files';
 
 export interface AdminUser {
   id: number;

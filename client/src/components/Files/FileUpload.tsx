@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { uploadFile } from '../../api/files';
 import { useToast } from '../../contexts/ToastContext';
 import { validateFileSize } from '../../utils/validators';
-import Loading from '../Common/Loading';
 import './FileUpload.css';
 
 interface FileUploadProps {
