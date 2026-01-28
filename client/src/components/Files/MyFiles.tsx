@@ -285,6 +285,7 @@ const MyFiles: React.FC = () => {
             <div className="files-table">
               <div className="table-header">
                 <div className="table-cell">Filename</div>
+                <div className="table-cell">Description</div>
                 <div className="table-cell">Size</div>
                 <div className="table-cell">Uploaded</div>
                 <div className="table-cell">Actions</div>
@@ -296,6 +297,7 @@ const MyFiles: React.FC = () => {
                       <span className="file-icon">📄</span>
                       <span className="filename">{file.filename}</span>
                     </div>
+                    <div className="table-cell">{file.description || '-'}</div>
                     <div className="table-cell">{formatFileSize(file.fileSize)}</div>
                     <div className="table-cell">{formatDate(file.createdAt)}</div>
                     <div className="table-cell">
