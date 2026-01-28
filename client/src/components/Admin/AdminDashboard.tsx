@@ -6,6 +6,7 @@ import {
   getAllFiles,
   deleteFileAdmin,
   toggleUserStatus,
+  deleteUser,
   uploadPublicFile,
   getPublicFilesAdmin,
   deletePublicFile,
@@ -226,6 +227,20 @@ const AdminDashboard: React.FC = () => {
       loadUsers();
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Failed to update user status');
+    }
+  };
+
+  const handleDeleteUser = async (userId: number, email: string) => {
+    if (!window.confirm(`Are you sure you want to delete user "${email}"? This will also delete all their files.`)) {
+      return;
+    }
+
+    try {
+      await deleteUser(userId);
+      showSuccess('User deleted successfully');
+      loadUsers();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to delete user');
     }
   };
 
@@ -496,6 +511,7 @@ const AdminDashboard: React.FC = () => {
               <div className="data-table">
                 <div className="table-header user-files-header">
                   <div className="table-cell">Filename</div>
+                  <div className="table-cell">Description</div>
                   <div className="table-cell">Owner</div>
                   <div className="table-cell">Size</div>
                   <div className="table-cell">Uploaded</div>
@@ -505,6 +521,7 @@ const AdminDashboard: React.FC = () => {
                   {userFiles.map((file) => (
                     <div key={file.id} className="table-row user-files-row">
                       <div className="table-cell">{file.filename}</div>
+                      <div className="table-cell">{file.description || '-'}</div>
                       <div className="table-cell">{file.user?.email || 'Unknown'}</div>
                       <div className="table-cell">{formatFileSize(file.fileSize)}</div>
                       <div className="table-cell">{formatDate(file.createdAt)}</div>
@@ -600,12 +617,18 @@ const AdminDashboard: React.FC = () => {
                         </span>
                       </div>
                       <div className="table-cell">{formatDate(u.createdAt)}</div>
-                      <div className="table-cell">
+                      <div className="table-cell actions-cell">
                         <button
                           onClick={() => handleToggleUserStatus(u.id, u.isActive)}
                           className={`btn-action ${u.isActive ? 'btn-deactivate' : 'btn-activate'}`}
                         >
                           {u.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(u.id, u.email)}
+                          className="btn-action btn-delete"
+                        >
+                          Delete
                         </button>
                       </div>
                     </div>

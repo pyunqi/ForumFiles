@@ -692,7 +692,7 @@
 
 .user-files-header,
 .user-files-row {
-  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 2fr 2fr 1fr 1fr 1fr;
 }
 
 .users-header,

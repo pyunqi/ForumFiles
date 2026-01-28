@@ -79,6 +79,12 @@ export const toggleUserStatus = async (
   return response.data;
 };
 
+// Delete user
+export const deleteUser = async (userId: number): Promise<{ message: string }> => {
+  const response = await request.delete<{ message: string }>(`/admin/users/${userId}`);
+  return response.data;
+};
+
 // Delete file (admin)
 export const deleteFileAdmin = async (fileId: number): Promise<void> => {
   await request.delete(`/admin/files/${fileId}`);

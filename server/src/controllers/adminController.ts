@@ -189,6 +189,45 @@ export async function toggleUserStatus(req: Request, res: Response) {
   }
 }
 
+// Delete user (admin)
+export async function deleteUser(req: Request, res: Response) {
+  try {
+    const userId = parseInt(req.params.id);
+
+    // Prevent deleting yourself
+    if (req.user?.userId === userId) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+
+    // Check if user exists
+    const user = await getQuery<User>(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Delete user's files first (soft delete)
+    await runQuery(
+      'UPDATE files SET is_deleted = 1 WHERE user_id = ?',
+      [userId]
+    );
+
+    // Delete user
+    await runQuery(
+      'DELETE FROM users WHERE id = ?',
+      [userId]
+    );
+
+    res.json({ message: `User ${user.email} deleted successfully` });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+}
+
 // Delete file (admin)
 export async function deleteFileAdmin(req: Request, res: Response) {
   try {

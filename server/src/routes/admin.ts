@@ -5,6 +5,7 @@ import {
   getAllUsers,
   getAllFiles,
   toggleUserStatus,
+  deleteUser,
   deleteFileAdmin,
   shareFile,
   generatePublicLink,
@@ -25,6 +26,7 @@ router.use(adminMiddleware);
 // User management
 router.get('/users', getAllUsers);
 router.put('/users/:id/toggle-status', toggleUserStatus);
+router.delete('/users/:id', deleteUser);
 
 // Admin management
 router.get('/admins', getAllAdmins);
