@@ -356,15 +356,45 @@ const AdminDashboard: React.FC = () => {
       const response = await exportAllFiles(userFilesSearch);
       const files = response.files;
 
+      // Generate download links for all files (7 days expiration)
+      const linkPromises = files.map(async (file) => {
+        try {
+          const linkResponse = await generatePublicLink({
+            fileId: file.id,
+            expiresIn: 168, // 7 days
+          });
+          return {
+            fileId: file.id,
+            link: linkResponse.link,
+            password: linkResponse.password,
+            expiresAt: linkResponse.expiresAt,
+          };
+        } catch {
+          return {
+            fileId: file.id,
+            link: 'Failed to generate',
+            password: '',
+            expiresAt: null,
+          };
+        }
+      });
+
+      const linkResults = await Promise.all(linkPromises);
+      const linkMap = new Map(linkResults.map(r => [r.fileId, r]));
+
       // Prepare data for Excel
       const excelData = files.map((file) => {
         const parsed = parseDescription(file.description);
+        const linkInfo = linkMap.get(file.id);
 
         return {
           'Filename': file.filename,
           'Owner Email': file.user?.email || 'Unknown',
           'File Size': formatFileSize(file.fileSize),
           'Upload Date': formatDate(file.createdAt),
+          'Download Link': linkInfo?.link || '',
+          'Link Password': linkInfo?.password || '',
+          'Link Expires': linkInfo?.expiresAt ? formatDate(linkInfo.expiresAt) : '',
           'Author Title': parsed?.personalInfo?.title || '',
           'Author Email': parsed?.personalInfo?.email || '',
           'First Name': parsed?.personalInfo?.firstName || '',
