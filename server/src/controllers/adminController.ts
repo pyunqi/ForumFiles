@@ -169,6 +169,50 @@ export async function getAllFiles(req: Request, res: Response) {
   }
 }
 
+// Export all files for Excel
+export async function exportAllFiles(req: Request, res: Response) {
+  try {
+    const search = req.query.search as string || '';
+
+    let query = `
+      SELECT f.*, u.email as user_email
+      FROM files f
+      JOIN users u ON f.user_id = u.id
+      WHERE f.is_deleted = 0
+    `;
+
+    const params: any[] = [];
+
+    if (search) {
+      query += ' AND (f.original_filename LIKE ? OR f.description LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    query += ' ORDER BY f.created_at DESC';
+
+    const files = await allQuery<any>(query, params);
+
+    res.json({
+      files: files.map(file => ({
+        id: file.id,
+        filename: file.original_filename,
+        description: file.description,
+        fileSize: file.file_size,
+        mimeType: file.mime_type,
+        downloadCount: file.download_count,
+        user: {
+          id: file.user_id,
+          email: file.user_email
+        },
+        createdAt: file.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Export all files error:', error);
+    res.status(500).json({ error: 'Failed to export files' });
+  }
+}
+
 // Deactivate/activate user
 export async function toggleUserStatus(req: Request, res: Response) {
   try {

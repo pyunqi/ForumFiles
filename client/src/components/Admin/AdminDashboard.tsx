@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
   getAllUsers,
   getAllFiles,
+  exportAllFiles,
   deleteFileAdmin,
   toggleUserStatus,
   deleteUser,
@@ -84,6 +86,7 @@ const AdminDashboard: React.FC = () => {
   const [loadingUserFiles, setLoadingUserFiles] = useState(false);
   const [deletingFile, setDeletingFile] = useState<number | null>(null);
   const [selectedFileForDetails, setSelectedFileForDetails] = useState<FileInfo | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   // Users state
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -297,6 +300,65 @@ const AdminDashboard: React.FC = () => {
       showError(error instanceof Error ? error.message : 'Failed to delete file');
     } finally {
       setDeletingFile(null);
+    }
+  };
+
+  const handleExportToExcel = async () => {
+    setExporting(true);
+    try {
+      const response = await exportAllFiles(userFilesSearch);
+      const files = response.files;
+
+      // Prepare data for Excel
+      const excelData = files.map((file) => {
+        const parsed = parseDescription(file.description);
+
+        return {
+          'Filename': file.filename,
+          'Owner Email': file.user?.email || 'Unknown',
+          'File Size': formatFileSize(file.fileSize),
+          'Upload Date': formatDate(file.createdAt),
+          'Author Title': parsed?.personalInfo?.title || '',
+          'Author Email': parsed?.personalInfo?.email || '',
+          'First Name': parsed?.personalInfo?.firstName || '',
+          'Last Name': parsed?.personalInfo?.lastName || '',
+          'Affiliations': parsed?.personalInfo?.affiliations || '',
+          'Country': parsed?.personalInfo?.country || '',
+          'Is Correspondent': parsed?.personalInfo?.isCorrespondent ? 'Yes' : 'No',
+          'Is Presenter': parsed?.personalInfo?.isPresenter ? 'Yes' : 'No',
+          'Abstract Title': parsed?.abstractDetails?.title || '',
+          'Keyword': parsed?.abstractDetails?.keyword || '',
+          'Presentation Type': parsed?.presentationType || '',
+        };
+      });
+
+      // Create workbook and worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'User Files');
+
+      // Auto-size columns
+      const maxWidth = 50;
+      const colWidths = Object.keys(excelData[0] || {}).map((key) => {
+        const maxLen = Math.max(
+          key.length,
+          ...excelData.map((row) => String(row[key as keyof typeof row] || '').length)
+        );
+        return { wch: Math.min(maxLen + 2, maxWidth) };
+      });
+      worksheet['!cols'] = colWidths;
+
+      // Generate filename with date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `user-files-export-${date}.xlsx`;
+
+      // Download file
+      XLSX.writeFile(workbook, filename);
+      showSuccess(`Exported ${files.length} files to Excel`);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to export files');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -536,6 +598,13 @@ const AdminDashboard: React.FC = () => {
                 onKeyPress={(e) => e.key === 'Enter' && loadUserFiles()}
               />
               <button onClick={loadUserFiles} className="btn-search">Search</button>
+              <button
+                onClick={handleExportToExcel}
+                className="btn-export"
+                disabled={exporting}
+              >
+                {exporting ? 'Exporting...' : 'Export to Excel'}
+              </button>
             </div>
           </div>
 

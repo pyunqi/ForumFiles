@@ -243,6 +243,26 @@
   background: #1d4ed8;
 }
 
+.btn-export {
+  padding: 0.5rem 1.5rem;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+
+.btn-export:hover:not(:disabled) {
+  background: #047857;
+}
+
+.btn-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .data-table {
   width: 100%;
   overflow-x: auto;

@@ -1,5 +1,5 @@
 import request from './request';
-import { GetFilesResponse } from './files';
+import { GetFilesResponse, FileInfo } from './files';
 
 export interface AdminUser {
   id: number;
@@ -63,6 +63,15 @@ export const getAllFiles = async (
   const response = await request.get<GetFilesResponse>(
     '/admin/files',
     { params: { page, limit, search, userId } }
+  );
+  return response.data;
+};
+
+// Export all files for Excel
+export const exportAllFiles = async (search?: string): Promise<{ files: FileInfo[] }> => {
+  const response = await request.get<{ files: FileInfo[] }>(
+    '/admin/files/export',
+    { params: { search } }
   );
   return response.data;
 };

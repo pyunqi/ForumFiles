@@ -4,6 +4,7 @@ import { uploadMiddleware } from '../middleware/upload';
 import {
   getAllUsers,
   getAllFiles,
+  exportAllFiles,
   toggleUserStatus,
   deleteUser,
   deleteFileAdmin,
@@ -35,6 +36,7 @@ router.put('/users/:id/remove-admin', removeAdminRole);
 
 // User files management
 router.get('/files', getAllFiles);
+router.get('/files/export', exportAllFiles);
 router.delete('/files/:id', deleteFileAdmin);
 router.post('/share-file', shareFile);
 router.post('/generate-link', generatePublicLink);
