@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { uploadFile } from '../../api/files';
+import { register } from '../../api/auth';
 import { validateFileSize } from '../../utils/validators';
 import Header from '../Common/Header';
 import './UploadPage.css';
@@ -20,7 +21,7 @@ const UploadPage: React.FC = () => {
   // UI state
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [loggingIn, setLoggingIn] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,24 +45,36 @@ const UploadPage: React.FC = () => {
       return;
     }
 
-    // If not logged in, need to login/register first
+    // If not logged in, need to register or login first
     if (!isAuthenticated) {
       if (!email || !password) {
         showError('Please enter email and password');
         return;
       }
 
-      setLoggingIn(true);
-      try {
-        // Try to login first
-        await login({ email, password });
-      } catch (error) {
-        // If login fails, it might be a new user - show error
-        showError('Login failed. If you are a new user, please register first at My Files page.');
-        setLoggingIn(false);
+      if (password.length < 6) {
+        showError('Password must be at least 6 characters');
         return;
       }
-      setLoggingIn(false);
+
+      setProcessing(true);
+      try {
+        // Try to register first (for new users)
+        await register({ email, password });
+        showSuccess('Account created successfully');
+        // After registration, login
+        await login({ email, password });
+      } catch (registerError) {
+        // If registration fails (user exists), try to login
+        try {
+          await login({ email, password });
+        } catch (loginError) {
+          showError('Login failed. Please check your email and password.');
+          setProcessing(false);
+          return;
+        }
+      }
+      setProcessing(false);
     }
 
     // Now upload the file
@@ -101,11 +114,11 @@ const UploadPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="upload-form-card">
-          {/* Show login fields if not authenticated */}
+          {/* Show auth fields if not authenticated */}
           {!isAuthenticated && (
             <div className="auth-section">
-              <h3>Login to Upload</h3>
-              <p className="auth-hint">Enter your email and password to upload files</p>
+              <h3>Enter Your Information</h3>
+              <p className="auth-hint">New user? Just enter email and set a password. Existing user? Enter your credentials.</p>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
                 <input
@@ -114,8 +127,9 @@ const UploadPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
+                  autoComplete="email"
                   required
-                  disabled={uploading || loggingIn}
+                  disabled={uploading || processing}
                 />
               </div>
               <div className="form-group">
@@ -125,14 +139,12 @@ const UploadPage: React.FC = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Set or enter your password (min 6 characters)"
+                  autoComplete="current-password"
                   required
-                  disabled={uploading || loggingIn}
+                  disabled={uploading || processing}
                 />
               </div>
-              <p className="register-hint">
-                New user? <Link to="/my-files">Register here</Link> first.
-              </p>
             </div>
           )}
 
@@ -144,7 +156,7 @@ const UploadPage: React.FC = () => {
                 ref={fileInputRef}
                 type="file"
                 onChange={handleFileSelect}
-                disabled={uploading || loggingIn}
+                disabled={uploading || processing}
               />
               {selectedFile && (
                 <p className="selected-file-info">
@@ -161,7 +173,7 @@ const UploadPage: React.FC = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Add a description for this file..."
                 rows={3}
-                disabled={uploading || loggingIn}
+                disabled={uploading || processing}
               />
             </div>
           </div>
@@ -183,9 +195,9 @@ const UploadPage: React.FC = () => {
           <button
             type="submit"
             className="btn-upload-submit"
-            disabled={uploading || loggingIn || !selectedFile}
+            disabled={uploading || processing || !selectedFile}
           >
-            {loggingIn ? 'Logging in...' : uploading ? 'Uploading...' : 'Upload File'}
+            {processing ? 'Processing...' : uploading ? 'Uploading...' : 'Upload File'}
           </button>
         </form>
 
