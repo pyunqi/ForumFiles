@@ -5,6 +5,35 @@ import { formatFileSize, formatDate } from '../../utils/formatters';
 import Loading from '../Common/Loading';
 import './PublicDownload.css';
 
+// Type for parsed description
+interface ParsedDescription {
+  personalInfo?: {
+    title?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    affiliations?: string;
+    country?: string;
+    isCorrespondent?: boolean;
+    isPresenter?: boolean;
+  };
+  abstractDetails?: {
+    title?: string;
+    keyword?: string;
+  };
+  presentationType?: string;
+}
+
+// Helper to parse description JSON
+const parseDescription = (description: string | null): ParsedDescription | null => {
+  if (!description) return null;
+  try {
+    return JSON.parse(description);
+  } catch {
+    return null;
+  }
+};
+
 const PublicDownload: React.FC = () => {
   const { linkCode } = useParams<{ linkCode: string }>();
   const [loading, setLoading] = useState(true);
@@ -65,9 +94,7 @@ const PublicDownload: React.FC = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      // Show success message
       setError('');
-      alert('Download started successfully!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Download failed');
     } finally {
@@ -83,7 +110,7 @@ const PublicDownload: React.FC = () => {
     return (
       <div className="public-download-container">
         <div className="public-download-card error-card">
-          <div className="error-icon">❌</div>
+          <div className="error-icon">!</div>
           <h1>Error</h1>
           <p>{error}</p>
           <a href="/" className="btn-home">Go to Home</a>
@@ -92,78 +119,180 @@ const PublicDownload: React.FC = () => {
     );
   }
 
+  const parsed = parseDescription(fileInfo?.description);
+
   return (
     <div className="public-download-container">
       <div className="public-download-card">
-        <div className="file-icon-large">📄</div>
-
-        <h1 className="file-title">{fileInfo.filename}</h1>
-
-        {fileInfo.description && (
-          <p className="file-description">{fileInfo.description}</p>
-        )}
-
-        <div className="file-details">
-          <div className="detail-item">
-            <span className="detail-label">File Size:</span>
-            <span className="detail-value">{formatFileSize(fileInfo.fileSize)}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Type:</span>
-            <span className="detail-value">{fileInfo.mimeType}</span>
-          </div>
-          {fileInfo.expiresAt && (
-            <div className="detail-item">
-              <span className="detail-label">Expires:</span>
-              <span className="detail-value">{formatDate(fileInfo.expiresAt)}</span>
-            </div>
-          )}
-          {fileInfo.maxDownloads && (
-            <div className="detail-item">
-              <span className="detail-label">Downloads:</span>
-              <span className="detail-value">
-                {fileInfo.downloadCount} / {fileInfo.maxDownloads}
-              </span>
-            </div>
-          )}
+        {/* Header */}
+        <div className="download-header">
+          <h1>File Download</h1>
+          <p>You have been shared a file</p>
         </div>
 
-        <form onSubmit={handleDownload} className="download-form">
-          {showPasswordInput && (
-            <div className="form-group">
-              <label htmlFor="password">Password Required</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password to download"
-                disabled={downloading}
-                className="password-input"
-                autoFocus
-              />
+        {/* File Information Section */}
+        <div className="download-section">
+          <h2 className="section-title">File Information</h2>
+          <div className="file-info-card">
+            <div className="file-icon-wrapper">
+              <span className="file-icon-large">📄</span>
             </div>
-          )}
+            <div className="file-info-details">
+              <h3 className="file-name">{fileInfo.filename}</h3>
+              <div className="file-meta">
+                <span className="meta-item">
+                  <span className="meta-label">Size:</span> {formatFileSize(fileInfo.fileSize)}
+                </span>
+                <span className="meta-item">
+                  <span className="meta-label">Type:</span> {fileInfo.mimeType}
+                </span>
+              </div>
+              {fileInfo.expiresAt && (
+                <div className="file-meta">
+                  <span className="meta-item">
+                    <span className="meta-label">Expires:</span> {formatDate(fileInfo.expiresAt)}
+                  </span>
+                </div>
+              )}
+              {fileInfo.maxDownloads && (
+                <div className="file-meta">
+                  <span className="meta-item">
+                    <span className="meta-label">Downloads:</span> {fileInfo.downloadCount} / {fileInfo.maxDownloads}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-          {error && <div className="error-message">{error}</div>}
+        {/* Submission Details Section - Only show if description is parsed JSON */}
+        {parsed && (
+          <div className="download-section">
+            <h2 className="section-title">Submission Details</h2>
 
-          <button
-            type="submit"
-            disabled={downloading || (showPasswordInput && !password)}
-            className="btn-download"
-          >
-            {downloading ? (
-              <>
-                <span className="spinner"></span>
-                Downloading...
-              </>
-            ) : (
-              <>
-                ⬇ Download File
-              </>
+            {/* Personal & Contact Information */}
+            {parsed.personalInfo && (
+              <div className="info-block">
+                <h4>1. Personal & Contact Information</h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Author 1 Title</span>
+                    <span className="info-value">{parsed.personalInfo.title || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Author 1 Email</span>
+                    <span className="info-value">{parsed.personalInfo.email || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Author 1 First Name</span>
+                    <span className="info-value">{parsed.personalInfo.firstName || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Author 1 Last Name</span>
+                    <span className="info-value">{parsed.personalInfo.lastName || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Author 1 Affiliations</span>
+                    <span className="info-value">{parsed.personalInfo.affiliations || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Author 1 Country</span>
+                    <span className="info-value">{parsed.personalInfo.country || '-'}</span>
+                  </div>
+                </div>
+                <div className="info-checkboxes">
+                  <span className={`info-checkbox ${parsed.personalInfo.isCorrespondent ? 'checked' : ''}`}>
+                    {parsed.personalInfo.isCorrespondent ? '✓' : '○'} Author 1 Correspondent
+                  </span>
+                  <span className={`info-checkbox ${parsed.personalInfo.isPresenter ? 'checked' : ''}`}>
+                    {parsed.personalInfo.isPresenter ? '✓' : '○'} Author 1 Presenter
+                  </span>
+                </div>
+              </div>
             )}
-          </button>
-        </form>
+
+            {/* Abstract Details */}
+            {parsed.abstractDetails && (
+              <div className="info-block">
+                <h4>2. Abstract Details</h4>
+                <div className="info-grid single-column">
+                  <div className="info-item full-width">
+                    <span className="info-label">Title of Abstract</span>
+                    <span className="info-value">{parsed.abstractDetails.title || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Keyword 1</span>
+                    <span className="info-value">{parsed.abstractDetails.keyword || '-'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Presentation Type */}
+            {parsed.presentationType && (
+              <div className="info-block">
+                <h4>3. Presentation Type</h4>
+                <div className="info-grid single-column">
+                  <div className="info-item">
+                    <span className="info-label">Type</span>
+                    <span className="info-value">{parsed.presentationType}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Plain description - Only show if not JSON */}
+        {!parsed && fileInfo.description && (
+          <div className="download-section">
+            <h2 className="section-title">Description</h2>
+            <p className="plain-description">{fileInfo.description}</p>
+          </div>
+        )}
+
+        {/* Download Section */}
+        <div className="download-section download-action-section">
+          <h2 className="section-title">Download</h2>
+
+          <form onSubmit={handleDownload} className="download-form">
+            {showPasswordInput && (
+              <div className="form-group">
+                <label htmlFor="password">Password Required</label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password to download"
+                  disabled={downloading}
+                  className="password-input"
+                  autoFocus
+                />
+              </div>
+            )}
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button
+              type="submit"
+              disabled={downloading || (showPasswordInput && !password)}
+              className="btn-download"
+            >
+              {downloading ? (
+                <>
+                  <span className="spinner"></span>
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <span className="download-icon">↓</span>
+                  Download File
+                </>
+              )}
+            </button>
+          </form>
+        </div>
 
         <div className="powered-by">
           <p>Powered by ForumFiles</p>
