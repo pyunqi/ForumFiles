@@ -65,7 +65,8 @@ const UploadPage: React.FC = () => {
         showSuccess('Account created successfully');
         // Registration auto-logs in now, continue to upload
       } catch (registerError: any) {
-        const regErrorMessage = registerError?.response?.data?.error || '';
+        // Note: axios interceptor converts errors to plain Error objects with message
+        const regErrorMessage = registerError?.message || '';
 
         if (regErrorMessage.includes('already registered')) {
           // User already exists, try to login silently
