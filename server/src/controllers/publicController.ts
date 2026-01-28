@@ -22,6 +22,7 @@ interface FileRecord {
   file_path: string;
   file_size: number;
   mime_type: string;
+  created_at: string;
 }
 
 // Get public link info
@@ -54,7 +55,7 @@ export async function getPublicLinkInfo(req: Request, res: Response) {
 
     // Get file info
     const file = await getQuery<FileRecord>(
-      `SELECT id, original_filename, description, file_size, mime_type
+      `SELECT id, original_filename, description, file_size, mime_type, created_at
        FROM files WHERE id = ? AND is_deleted = 0`,
       [link.file_id]
     );
@@ -71,7 +72,8 @@ export async function getPublicLinkInfo(req: Request, res: Response) {
       requiresPassword: true,
       expiresAt: link.expires_at,
       downloadCount: link.download_count,
-      maxDownloads: link.max_downloads
+      maxDownloads: link.max_downloads,
+      createdAt: file.created_at
     });
   } catch (error) {
     console.error('Get public link info error:', error);

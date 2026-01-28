@@ -9,6 +9,7 @@ export interface PublicLinkInfo {
   expiresAt: string | null;
   downloadCount: number;
   maxDownloads: number | null;
+  createdAt: string;
 }
 
 export interface DownloadPublicFileRequest {

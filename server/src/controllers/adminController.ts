@@ -378,13 +378,10 @@ export async function generatePublicLink(req: Request, res: Response) {
     let expiresAt: string | null = null;
     if (expiresIn) {
       const hours = parseInt(expiresIn);
-      if (hours === 24) { // 1 day
-        expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      } else if (hours === 72) { // 3 days
-        expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
-      } else if (hours === 168) { // 7 days
-        expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      if (hours > 0) {
+        expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
       }
+      // If hours is 0 or not provided, expiresAt remains null (never expires)
     }
 
     // Create public link record
