@@ -685,6 +685,21 @@
   grid-template-columns: 2fr 1fr 1fr 1fr;
 }
 
+.public-files-header,
+.public-files-row {
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr 1fr;
+}
+
+.user-files-header,
+.user-files-row {
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+}
+
+.users-header,
+.users-row {
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
 .you-badge {
   margin-left: 0.5rem;
   font-size: 0.8rem;

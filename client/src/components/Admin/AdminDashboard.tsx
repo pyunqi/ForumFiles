@@ -3,6 +3,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
   getAllUsers,
+  getAllFiles,
+  deleteFileAdmin,
+  toggleUserStatus,
   uploadPublicFile,
   getPublicFilesAdmin,
   deletePublicFile,
@@ -17,6 +20,8 @@ import { formatFileSize, formatDate } from '../../utils/formatters';
 import Loading from '../Common/Loading';
 import './AdminDashboard.css';
 
+type TabType = 'publicFiles' | 'userFiles' | 'users' | 'admins';
+
 const AdminDashboard: React.FC = () => {
   const { isAuthenticated, user, login } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -26,21 +31,36 @@ const AdminDashboard: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'publicFiles' | 'admins'>('publicFiles');
+  const [activeTab, setActiveTab] = useState<TabType>('publicFiles');
 
   // Public files state
   const [publicFiles, setPublicFiles] = useState<FileInfo[]>([]);
   const [loadingPublicFiles, setLoadingPublicFiles] = useState(false);
 
+  // User files state
+  const [userFiles, setUserFiles] = useState<FileInfo[]>([]);
+  const [userFilesPage, setUserFilesPage] = useState(1);
+  const [userFilesTotalPages, setUserFilesTotalPages] = useState(1);
+  const [userFilesSearch, setUserFilesSearch] = useState('');
+  const [loadingUserFiles, setLoadingUserFiles] = useState(false);
+  const [deletingFile, setDeletingFile] = useState<number | null>(null);
+
+  // Users state
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersTotalPages, setUsersTotalPages] = useState(1);
+  const [usersSearch, setUsersSearch] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
   // Admins state
   const [admins, setAdmins] = useState<AdminInfo[]>([]);
   const [loadingAdmins, setLoadingAdmins] = useState(false);
 
-  // Users for adding admin
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [usersSearch, setUsersSearch] = useState('');
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [showUserSearch, setShowUserSearch] = useState(false);
+  // Add admin search state
+  const [addAdminSearch, setAddAdminSearch] = useState('');
+  const [addAdminResults, setAddAdminResults] = useState<AdminUser[]>([]);
+  const [loadingAddAdmin, setLoadingAddAdmin] = useState(false);
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
 
   // Upload state
   const [uploading, setUploading] = useState(false);
@@ -53,13 +73,38 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     if (isAdmin) {
-      if (activeTab === 'publicFiles') {
-        loadPublicFiles();
-      } else {
-        loadAdmins();
-      }
+      loadDataForTab(activeTab);
     }
   }, [isAdmin, activeTab]);
+
+  useEffect(() => {
+    if (isAdmin && activeTab === 'userFiles') {
+      loadUserFiles();
+    }
+  }, [userFilesPage]);
+
+  useEffect(() => {
+    if (isAdmin && activeTab === 'users') {
+      loadUsers();
+    }
+  }, [usersPage]);
+
+  const loadDataForTab = (tab: TabType) => {
+    switch (tab) {
+      case 'publicFiles':
+        loadPublicFiles();
+        break;
+      case 'userFiles':
+        loadUserFiles();
+        break;
+      case 'users':
+        loadUsers();
+        break;
+      case 'admins':
+        loadAdmins();
+        break;
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +116,6 @@ const AdminDashboard: React.FC = () => {
     setLoggingIn(true);
     try {
       await login({ email, password });
-      // Check if logged in user is admin after login
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Login failed');
     } finally {
@@ -91,6 +135,32 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const loadUserFiles = async () => {
+    setLoadingUserFiles(true);
+    try {
+      const response = await getAllFiles(userFilesPage, 20, userFilesSearch);
+      setUserFiles(response.files);
+      setUserFilesTotalPages(response.pagination.totalPages);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to load user files');
+    } finally {
+      setLoadingUserFiles(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const response = await getAllUsers(usersPage, 20, usersSearch);
+      setUsers(response.users);
+      setUsersTotalPages(response.pagination.totalPages);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to load users');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   const loadAdmins = async () => {
     setLoadingAdmins(true);
     try {
@@ -103,20 +173,20 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const searchUsers = async () => {
-    if (!usersSearch.trim()) {
+  const searchUsersForAdmin = async () => {
+    if (!addAdminSearch.trim()) {
       showError('Please enter an email to search');
       return;
     }
 
-    setLoadingUsers(true);
+    setLoadingAddAdmin(true);
     try {
-      const response = await getAllUsers(1, 10, usersSearch);
-      setUsers(response.users.filter(u => u.role !== 'admin'));
+      const response = await getAllUsers(1, 10, addAdminSearch);
+      setAddAdminResults(response.users.filter(u => u.role !== 'admin'));
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Failed to search users');
     } finally {
-      setLoadingUsers(false);
+      setLoadingAddAdmin(false);
     }
   };
 
@@ -124,10 +194,11 @@ const AdminDashboard: React.FC = () => {
     try {
       await setUserAsAdmin(userId);
       showSuccess('User is now an admin');
-      setShowUserSearch(false);
-      setUsersSearch('');
-      setUsers([]);
+      setShowAddAdmin(false);
+      setAddAdminSearch('');
+      setAddAdminResults([]);
       loadAdmins();
+      loadUsers();
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Failed to set admin');
     }
@@ -142,8 +213,36 @@ const AdminDashboard: React.FC = () => {
       await removeAdminRole(adminId);
       showSuccess('Admin role removed');
       loadAdmins();
+      loadUsers();
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Failed to remove admin');
+    }
+  };
+
+  const handleToggleUserStatus = async (userId: number, currentStatus: boolean) => {
+    try {
+      await toggleUserStatus(userId, !currentStatus);
+      showSuccess(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      loadUsers();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to update user status');
+    }
+  };
+
+  const handleDeleteUserFile = async (fileId: number) => {
+    if (!window.confirm('Are you sure you want to delete this file?')) {
+      return;
+    }
+
+    setDeletingFile(fileId);
+    try {
+      await deleteFileAdmin(fileId);
+      showSuccess('File deleted successfully');
+      loadUserFiles();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to delete file');
+    } finally {
+      setDeletingFile(null);
     }
   };
 
@@ -260,6 +359,18 @@ const AdminDashboard: React.FC = () => {
           Public Files
         </button>
         <button
+          className={`admin-tab ${activeTab === 'userFiles' ? 'active' : ''}`}
+          onClick={() => setActiveTab('userFiles')}
+        >
+          User Files
+        </button>
+        <button
+          className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          User Accounts
+        </button>
+        <button
           className={`admin-tab ${activeTab === 'admins' ? 'active' : ''}`}
           onClick={() => setActiveTab('admins')}
         >
@@ -325,7 +436,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="data-table">
-              <div className="table-header">
+              <div className="table-header public-files-header">
                 <div className="table-cell">Filename</div>
                 <div className="table-cell">Description</div>
                 <div className="table-cell">Size</div>
@@ -335,7 +446,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="table-body">
                 {publicFiles.map((file) => (
-                  <div key={file.id} className="table-row">
+                  <div key={file.id} className="table-row public-files-row">
                     <div className="table-cell">{file.filename}</div>
                     <div className="table-cell">{file.description || '-'}</div>
                     <div className="table-cell">{formatFileSize(file.fileSize)}</div>
@@ -357,6 +468,177 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* User Files Tab */}
+      {activeTab === 'userFiles' && (
+        <div className="admin-section">
+          <div className="section-header">
+            <h2>User Files Management</h2>
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Search by filename..."
+                value={userFilesSearch}
+                onChange={(e) => setUserFilesSearch(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && loadUserFiles()}
+              />
+              <button onClick={loadUserFiles} className="btn-search">Search</button>
+            </div>
+          </div>
+
+          {loadingUserFiles ? (
+            <Loading />
+          ) : userFiles.length === 0 ? (
+            <div className="empty-state">
+              <p>No user files found.</p>
+            </div>
+          ) : (
+            <>
+              <div className="data-table">
+                <div className="table-header user-files-header">
+                  <div className="table-cell">Filename</div>
+                  <div className="table-cell">Owner</div>
+                  <div className="table-cell">Size</div>
+                  <div className="table-cell">Uploaded</div>
+                  <div className="table-cell">Actions</div>
+                </div>
+                <div className="table-body">
+                  {userFiles.map((file) => (
+                    <div key={file.id} className="table-row user-files-row">
+                      <div className="table-cell">{file.filename}</div>
+                      <div className="table-cell">{file.user?.email || 'Unknown'}</div>
+                      <div className="table-cell">{formatFileSize(file.fileSize)}</div>
+                      <div className="table-cell">{formatDate(file.createdAt)}</div>
+                      <div className="table-cell">
+                        <button
+                          onClick={() => handleDeleteUserFile(file.id)}
+                          className="btn-action btn-delete"
+                          disabled={deletingFile === file.id}
+                        >
+                          {deletingFile === file.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {userFilesTotalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    onClick={() => setUserFilesPage(p => Math.max(1, p - 1))}
+                    disabled={userFilesPage === 1}
+                    className="btn-pagination"
+                  >
+                    Previous
+                  </button>
+                  <span className="page-info">
+                    Page {userFilesPage} of {userFilesTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setUserFilesPage(p => Math.min(userFilesTotalPages, p + 1))}
+                    disabled={userFilesPage === userFilesTotalPages}
+                    className="btn-pagination"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* User Accounts Tab */}
+      {activeTab === 'users' && (
+        <div className="admin-section">
+          <div className="section-header">
+            <h2>User Accounts Management</h2>
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Search by email..."
+                value={usersSearch}
+                onChange={(e) => setUsersSearch(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && loadUsers()}
+              />
+              <button onClick={loadUsers} className="btn-search">Search</button>
+            </div>
+          </div>
+
+          {loadingUsers ? (
+            <Loading />
+          ) : users.length === 0 ? (
+            <div className="empty-state">
+              <p>No users found.</p>
+            </div>
+          ) : (
+            <>
+              <div className="data-table">
+                <div className="table-header users-header">
+                  <div className="table-cell">Email</div>
+                  <div className="table-cell">Role</div>
+                  <div className="table-cell">Files</div>
+                  <div className="table-cell">Storage</div>
+                  <div className="table-cell">Status</div>
+                  <div className="table-cell">Joined</div>
+                  <div className="table-cell">Actions</div>
+                </div>
+                <div className="table-body">
+                  {users.map((u) => (
+                    <div key={u.id} className="table-row users-row">
+                      <div className="table-cell">{u.email}</div>
+                      <div className="table-cell">
+                        <span className={`badge badge-${u.role}`}>
+                          {u.role}
+                        </span>
+                      </div>
+                      <div className="table-cell">{u.filesCount}</div>
+                      <div className="table-cell">{formatFileSize(u.totalFileSize)}</div>
+                      <div className="table-cell">
+                        <span className={`status-badge ${u.isActive ? 'active' : 'inactive'}`}>
+                          {u.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      <div className="table-cell">{formatDate(u.createdAt)}</div>
+                      <div className="table-cell">
+                        <button
+                          onClick={() => handleToggleUserStatus(u.id, u.isActive)}
+                          className={`btn-action ${u.isActive ? 'btn-deactivate' : 'btn-activate'}`}
+                        >
+                          {u.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {usersTotalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                    disabled={usersPage === 1}
+                    className="btn-pagination"
+                  >
+                    Previous
+                  </button>
+                  <span className="page-info">
+                    Page {usersPage} of {usersTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setUsersPage(p => Math.min(usersTotalPages, p + 1))}
+                    disabled={usersPage === usersTotalPages}
+                    className="btn-pagination"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {/* Admins Tab */}
       {activeTab === 'admins' && (
         <div className="admin-section">
@@ -364,33 +646,33 @@ const AdminDashboard: React.FC = () => {
             <h2>Admin Management</h2>
             <button
               className="btn-add-admin"
-              onClick={() => setShowUserSearch(!showUserSearch)}
+              onClick={() => setShowAddAdmin(!showAddAdmin)}
             >
-              {showUserSearch ? 'Cancel' : '+ Add Admin'}
+              {showAddAdmin ? 'Cancel' : '+ Add Admin'}
             </button>
           </div>
 
           {/* Add Admin Search */}
-          {showUserSearch && (
+          {showAddAdmin && (
             <div className="add-admin-form">
               <h3>Add New Admin</h3>
               <p>Search for a user by email to make them an admin</p>
               <div className="search-row">
                 <input
                   type="text"
-                  value={usersSearch}
-                  onChange={(e) => setUsersSearch(e.target.value)}
+                  value={addAdminSearch}
+                  onChange={(e) => setAddAdminSearch(e.target.value)}
                   placeholder="Enter user email..."
-                  onKeyPress={(e) => e.key === 'Enter' && searchUsers()}
+                  onKeyPress={(e) => e.key === 'Enter' && searchUsersForAdmin()}
                 />
-                <button onClick={searchUsers} disabled={loadingUsers} className="btn-search">
-                  {loadingUsers ? 'Searching...' : 'Search'}
+                <button onClick={searchUsersForAdmin} disabled={loadingAddAdmin} className="btn-search">
+                  {loadingAddAdmin ? 'Searching...' : 'Search'}
                 </button>
               </div>
 
-              {users.length > 0 && (
+              {addAdminResults.length > 0 && (
                 <div className="search-results">
-                  {users.map((u) => (
+                  {addAdminResults.map((u) => (
                     <div key={u.id} className="search-result-item">
                       <span>{u.email}</span>
                       <button
