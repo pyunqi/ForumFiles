@@ -401,81 +401,98 @@ const MyFiles: React.FC = () => {
                 </button>
               </div>
               <div className="modal-body">
+                {/* File Information */}
+                <div className="detail-section">
+                  <h4>File Information</h4>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">Filename</span>
+                      <span className="detail-value">{selectedFile.filename}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Size</span>
+                      <span className="detail-value">{formatFileSize(selectedFile.fileSize)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Uploaded</span>
+                      <span className="detail-value">{formatDate(selectedFile.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+
                 {(() => {
                   const parsed = parseDescription(selectedFile.description);
-                  if (!parsed) return <p>No details available</p>;
+                  if (!parsed) return null;
 
                   return (
                     <>
-                      <div className="detail-section">
-                        <h4>File Information</h4>
-                        <div className="detail-row">
-                          <span className="detail-label">Filename:</span>
-                          <span className="detail-value">{selectedFile.filename}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Size:</span>
-                          <span className="detail-value">{formatFileSize(selectedFile.fileSize)}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Uploaded:</span>
-                          <span className="detail-value">{formatDate(selectedFile.createdAt)}</span>
-                        </div>
-                      </div>
-
+                      {/* 1. Personal & Contact Information */}
                       {parsed.personalInfo && (
                         <div className="detail-section">
-                          <h4>Personal & Contact Information</h4>
-                          <div className="detail-row">
-                            <span className="detail-label">Name:</span>
-                            <span className="detail-value">
-                              {parsed.personalInfo.title} {parsed.personalInfo.firstName} {parsed.personalInfo.lastName}
+                          <h4>1. Personal & Contact Information</h4>
+                          <div className="detail-grid">
+                            <div className="detail-item">
+                              <span className="detail-label">Author 1 Title</span>
+                              <span className="detail-value">{parsed.personalInfo.title || '-'}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Author 1 Email</span>
+                              <span className="detail-value">{parsed.personalInfo.email || '-'}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Author 1 First Name</span>
+                              <span className="detail-value">{parsed.personalInfo.firstName || '-'}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Author 1 Last Name</span>
+                              <span className="detail-value">{parsed.personalInfo.lastName || '-'}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Author 1 Affiliations</span>
+                              <span className="detail-value">{parsed.personalInfo.affiliations || '-'}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Author 1 Country</span>
+                              <span className="detail-value">{parsed.personalInfo.country || '-'}</span>
+                            </div>
+                          </div>
+                          <div className="detail-checkboxes">
+                            <span className={`detail-checkbox ${parsed.personalInfo.isCorrespondent ? 'checked' : ''}`}>
+                              {parsed.personalInfo.isCorrespondent ? '✓' : '○'} Author 1 Correspondent
                             </span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Email:</span>
-                            <span className="detail-value">{parsed.personalInfo.email}</span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Affiliations:</span>
-                            <span className="detail-value">{parsed.personalInfo.affiliations}</span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Country:</span>
-                            <span className="detail-value">{parsed.personalInfo.country}</span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Role:</span>
-                            <span className="detail-value">
-                              {[
-                                parsed.personalInfo.isCorrespondent && 'Correspondent',
-                                parsed.personalInfo.isPresenter && 'Presenter',
-                              ].filter(Boolean).join(', ') || '-'}
+                            <span className={`detail-checkbox ${parsed.personalInfo.isPresenter ? 'checked' : ''}`}>
+                              {parsed.personalInfo.isPresenter ? '✓' : '○'} Author 1 Presenter
                             </span>
                           </div>
                         </div>
                       )}
 
+                      {/* 2. Abstract Details */}
                       {parsed.abstractDetails && (
                         <div className="detail-section">
-                          <h4>Abstract Details</h4>
-                          <div className="detail-row">
-                            <span className="detail-label">Title:</span>
-                            <span className="detail-value">{parsed.abstractDetails.title}</span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="detail-label">Keyword:</span>
-                            <span className="detail-value">{parsed.abstractDetails.keyword}</span>
+                          <h4>2. Abstract Details</h4>
+                          <div className="detail-grid single-column">
+                            <div className="detail-item full-width">
+                              <span className="detail-label">Title of Abstract</span>
+                              <span className="detail-value">{parsed.abstractDetails.title || '-'}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Keyword 1</span>
+                              <span className="detail-value">{parsed.abstractDetails.keyword || '-'}</span>
+                            </div>
                           </div>
                         </div>
                       )}
 
+                      {/* 3. Presentation Type */}
                       {parsed.presentationType && (
                         <div className="detail-section">
-                          <h4>Presentation</h4>
-                          <div className="detail-row">
-                            <span className="detail-label">Type:</span>
-                            <span className="detail-value">{parsed.presentationType}</span>
+                          <h4>3. Presentation Type</h4>
+                          <div className="detail-grid single-column">
+                            <div className="detail-item">
+                              <span className="detail-label">Type</span>
+                              <span className="detail-value">{parsed.presentationType}</span>
+                            </div>
                           </div>
                         </div>
                       )}

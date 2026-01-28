@@ -414,39 +414,83 @@
 /* Detail Sections */
 .detail-section {
   margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .detail-section:last-child {
   margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .detail-section h4 {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 0.75rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
 }
 
-.detail-row {
+/* Detail Grid - Two Column Layout */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.detail-grid.single-column {
+  grid-template-columns: 1fr;
+}
+
+.detail-item {
   display: flex;
-  padding: 0.5rem 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
 }
 
 .detail-label {
-  width: 120px;
-  flex-shrink: 0;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #6b7280;
-  font-size: 0.875rem;
 }
 
 .detail-value {
-  flex: 1;
+  font-size: 0.9375rem;
   color: #1f2937;
-  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  background: #f9fafb;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e7eb;
   word-break: break-word;
+}
+
+/* Checkboxes display */
+.detail-checkboxes {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.detail-checkbox {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.detail-checkbox.checked {
+  color: #059669;
+}
+
+@media (max-width: 500px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-checkboxes {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
