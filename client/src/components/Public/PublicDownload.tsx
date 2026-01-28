@@ -124,51 +124,78 @@ const PublicDownload: React.FC = () => {
   return (
     <div className="public-download-container">
       <div className="public-download-card">
-        {/* Header */}
-        <div className="download-header">
-          <h1>File Download</h1>
-          <p>You have been shared a file</p>
-        </div>
-
-        {/* File Information Section */}
-        <div className="download-section">
-          <h2 className="section-title">File Information</h2>
-          <div className="file-info-card">
-            <div className="file-icon-wrapper">
+        {/* Main Download Section - Most Prominent */}
+        <div className="download-main-section">
+          <div className="download-file-display">
+            <div className="file-icon-box">
               <span className="file-icon-large">📄</span>
             </div>
-            <div className="file-info-details">
-              <h3 className="file-name">{fileInfo.filename}</h3>
-              <div className="file-meta">
-                <span className="meta-item">
-                  <span className="meta-label">Size:</span> {formatFileSize(fileInfo.fileSize)}
-                </span>
-                <span className="meta-item">
-                  <span className="meta-label">Type:</span> {fileInfo.mimeType}
-                </span>
+            <div className="file-details-box">
+              <h1 className="file-title">{fileInfo.filename}</h1>
+              <div className="file-meta-row">
+                <span className="file-meta-item">{formatFileSize(fileInfo.fileSize)}</span>
+                <span className="file-meta-divider">•</span>
+                <span className="file-meta-item">{fileInfo.mimeType}</span>
               </div>
-              {fileInfo.expiresAt && (
-                <div className="file-meta">
-                  <span className="meta-item">
-                    <span className="meta-label">Expires:</span> {formatDate(fileInfo.expiresAt)}
-                  </span>
-                </div>
-              )}
-              {fileInfo.maxDownloads && (
-                <div className="file-meta">
-                  <span className="meta-item">
-                    <span className="meta-label">Downloads:</span> {fileInfo.downloadCount} / {fileInfo.maxDownloads}
-                  </span>
+              {(fileInfo.expiresAt || fileInfo.maxDownloads) && (
+                <div className="file-meta-row secondary">
+                  {fileInfo.expiresAt && (
+                    <span className="file-meta-item">Expires: {formatDate(fileInfo.expiresAt)}</span>
+                  )}
+                  {fileInfo.maxDownloads && (
+                    <span className="file-meta-item">
+                      Downloads: {fileInfo.downloadCount} / {fileInfo.maxDownloads}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
           </div>
+
+          {/* Download Form - Directly Below File Info */}
+          <form onSubmit={handleDownload} className="download-form">
+            {showPasswordInput && (
+              <div className="password-section">
+                <label htmlFor="password">This file is password protected</label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  disabled={downloading}
+                  className="password-input"
+                  autoFocus
+                />
+              </div>
+            )}
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button
+              type="submit"
+              disabled={downloading || (showPasswordInput && !password)}
+              className="btn-download"
+            >
+              {downloading ? (
+                <>
+                  <span className="spinner"></span>
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <span className="download-arrow">↓</span>
+                  Download File
+                </>
+              )}
+            </button>
+          </form>
         </div>
 
-        {/* Submission Details Section - Only show if description is parsed JSON */}
+        {/* Submission Details Section - Secondary */}
         {parsed && (
-          <div className="download-section">
-            <h2 className="section-title">Submission Details</h2>
+          <div className="submission-details-section">
+            <h2 className="section-header">Submission Details</h2>
 
             {/* Personal & Contact Information */}
             {parsed.personalInfo && (
@@ -245,54 +272,11 @@ const PublicDownload: React.FC = () => {
 
         {/* Plain description - Only show if not JSON */}
         {!parsed && fileInfo.description && (
-          <div className="download-section">
-            <h2 className="section-title">Description</h2>
+          <div className="submission-details-section">
+            <h2 className="section-header">Description</h2>
             <p className="plain-description">{fileInfo.description}</p>
           </div>
         )}
-
-        {/* Download Section */}
-        <div className="download-section download-action-section">
-          <h2 className="section-title">Download</h2>
-
-          <form onSubmit={handleDownload} className="download-form">
-            {showPasswordInput && (
-              <div className="form-group">
-                <label htmlFor="password">Password Required</label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password to download"
-                  disabled={downloading}
-                  className="password-input"
-                  autoFocus
-                />
-              </div>
-            )}
-
-            {error && <div className="error-message">{error}</div>}
-
-            <button
-              type="submit"
-              disabled={downloading || (showPasswordInput && !password)}
-              className="btn-download"
-            >
-              {downloading ? (
-                <>
-                  <span className="spinner"></span>
-                  Downloading...
-                </>
-              ) : (
-                <>
-                  <span className="download-icon">↓</span>
-                  Download File
-                </>
-              )}
-            </button>
-          </form>
-        </div>
 
         <div className="powered-by">
           <p>Powered by ForumFiles</p>
