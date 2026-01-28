@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 import fs from 'fs';
+import bcrypt from 'bcrypt';
 
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../database/forum_files.db');
 
@@ -146,6 +147,67 @@ export function initializeDatabase(): Promise<void> {
       // Create indexes for file_shares table
       db.run('CREATE INDEX IF NOT EXISTS idx_file_shares_file ON file_shares(file_id)');
       db.run('CREATE INDEX IF NOT EXISTS idx_file_shares_recipient ON file_shares(recipient_email)');
+    });
+
+    // Create admin user from environment variables if configured
+    createAdminUser().then(resolve).catch(reject);
+  });
+}
+
+// Create admin user from environment variables
+async function createAdminUser(): Promise<void> {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    console.log('No admin credentials configured in environment variables');
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    // Check if admin user already exists
+    db.get('SELECT id, role FROM users WHERE email = ?', [adminEmail], async (err, row: any) => {
+      if (err) {
+        console.error('Error checking admin user:', err.message);
+        return resolve(); // Don't fail initialization
+      }
+
+      if (row) {
+        // User exists - update role to admin if not already
+        if (row.role !== 'admin') {
+          db.run('UPDATE users SET role = ? WHERE email = ?', ['admin', adminEmail], (err) => {
+            if (err) {
+              console.error('Error updating admin role:', err.message);
+            } else {
+              console.log(`Updated user ${adminEmail} to admin role`);
+            }
+            resolve();
+          });
+        } else {
+          console.log(`Admin user ${adminEmail} already exists`);
+          resolve();
+        }
+      } else {
+        // Create new admin user
+        try {
+          const passwordHash = await bcrypt.hash(adminPassword, 10);
+          db.run(
+            'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)',
+            [adminEmail, passwordHash, 'admin'],
+            (err) => {
+              if (err) {
+                console.error('Error creating admin user:', err.message);
+              } else {
+                console.log(`Admin user ${adminEmail} created successfully`);
+              }
+              resolve();
+            }
+          );
+        } catch (hashError) {
+          console.error('Error hashing admin password:', hashError);
+          resolve();
+        }
+      }
     });
   });
 }
