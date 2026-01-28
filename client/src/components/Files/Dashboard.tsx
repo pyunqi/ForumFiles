@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { getPublicFiles, downloadPublicFile, PublicFileInfo } from '../../api/files';
-import { formatFileSize, formatDate } from '../../utils/formatters';
+import { formatFileSize } from '../../utils/formatters';
 import Loading from '../Common/Loading';
 import Header from '../Common/Header';
 import './Dashboard.css';
@@ -31,6 +31,18 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get file extension
+  const getFileExtension = (filename: string) => {
+    const ext = filename.split('.').pop()?.toUpperCase() || 'FILE';
+    return ext;
+  };
+
+  // Format date as YYYY-MM-DD
+  const formatDateShort = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
   };
 
   const handleDownload = async (file: PublicFileInfo) => {
@@ -77,28 +89,43 @@ const Dashboard: React.FC = () => {
               <p>No files available for download yet.</p>
             </div>
           ) : (
-            <div className="public-files-list">
+            <div className="public-files-grid">
               {files.map((file) => (
-                <div key={file.id} className="public-file-card">
-                  <div className="file-icon">📄</div>
-                  <div className="file-info">
-                    <h3 className="file-name">{file.filename}</h3>
-                    {file.description && (
-                      <p className="file-description">{file.description}</p>
-                    )}
-                    <div className="file-meta">
-                      <span className="file-size">{formatFileSize(file.fileSize)}</span>
-                      <span className="file-date">{formatDate(file.createdAt)}</span>
-                      <span className="file-downloads">{file.downloadCount} downloads</span>
-                    </div>
+                <div key={file.id} className="file-card">
+                  {/* Header with file name */}
+                  <div className="file-card-header">
+                    <h3 className="file-card-name">{file.filename}</h3>
+                    <p className="file-card-meta">{getFileExtension(file.filename)} · {formatFileSize(file.fileSize)}</p>
                   </div>
-                  <button
-                    className="btn-download"
-                    onClick={() => handleDownload(file)}
-                    disabled={downloading === file.id}
-                  >
-                    {downloading === file.id ? 'Downloading...' : 'Download'}
-                  </button>
+
+                  {/* Body */}
+                  <div className="file-card-body">
+                    {/* Stats cards */}
+                    <div className="file-stats-row">
+                      <div className="file-stat-card">
+                        <span className="file-stat-label">Downloads</span>
+                        <span className="file-stat-value">{file.downloadCount?.toLocaleString() || 0}</span>
+                      </div>
+                      <div className="file-stat-card">
+                        <span className="file-stat-label">Upload Date</span>
+                        <span className="file-stat-value">{formatDateShort(file.createdAt)}</span>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    {file.description && (
+                      <p className="file-card-description">{file.description}</p>
+                    )}
+
+                    {/* Download button */}
+                    <button
+                      className="file-card-download-btn"
+                      onClick={() => handleDownload(file)}
+                      disabled={downloading === file.id}
+                    >
+                      {downloading === file.id ? 'Downloading...' : 'Download File'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
