@@ -11,6 +11,45 @@ import './MyFiles.css';
 
 type LoginMethod = 'password' | 'code';
 
+// Type for parsed description
+interface ParsedDescription {
+  personalInfo?: {
+    title?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    affiliations?: string;
+    country?: string;
+    isCorrespondent?: boolean;
+    isPresenter?: boolean;
+  };
+  abstractDetails?: {
+    title?: string;
+    keyword?: string;
+  };
+  presentationType?: string;
+}
+
+// Helper to parse description JSON
+const parseDescription = (description: string | null): ParsedDescription | null => {
+  if (!description) return null;
+  try {
+    return JSON.parse(description);
+  } catch {
+    return null;
+  }
+};
+
+// Get display title from description
+const getDisplayTitle = (description: string | null): string => {
+  const parsed = parseDescription(description);
+  if (parsed?.abstractDetails?.title) {
+    return parsed.abstractDetails.title;
+  }
+  // If not JSON or no abstract title, return original or dash
+  return description || '-';
+};
+
 const MyFiles: React.FC = () => {
   const { isAuthenticated, login } = useAuth();
   const { showError, showSuccess } = useToast();
@@ -31,6 +70,9 @@ const MyFiles: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deleting, setDeleting] = useState<number | null>(null);
+
+  // Modal state
+  const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -297,7 +339,17 @@ const MyFiles: React.FC = () => {
                       <span className="file-icon">📄</span>
                       <span className="filename">{file.filename}</span>
                     </div>
-                    <div className="table-cell">{file.description || '-'}</div>
+                    <div className="table-cell description-cell">
+                      <span className="description-text">{getDisplayTitle(file.description)}</span>
+                      {parseDescription(file.description) && (
+                        <button
+                          className="btn-details"
+                          onClick={() => setSelectedFile(file)}
+                        >
+                          Details
+                        </button>
+                      )}
+                    </div>
                     <div className="table-cell">{formatFileSize(file.fileSize)}</div>
                     <div className="table-cell">{formatDate(file.createdAt)}</div>
                     <div className="table-cell">
@@ -336,6 +388,103 @@ const MyFiles: React.FC = () => {
               </div>
             )}
           </>
+        )}
+
+        {/* Details Modal */}
+        {selectedFile && (
+          <div className="modal-overlay" onClick={() => setSelectedFile(null)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Submission Details</h2>
+                <button className="modal-close" onClick={() => setSelectedFile(null)}>
+                  &times;
+                </button>
+              </div>
+              <div className="modal-body">
+                {(() => {
+                  const parsed = parseDescription(selectedFile.description);
+                  if (!parsed) return <p>No details available</p>;
+
+                  return (
+                    <>
+                      <div className="detail-section">
+                        <h4>File Information</h4>
+                        <div className="detail-row">
+                          <span className="detail-label">Filename:</span>
+                          <span className="detail-value">{selectedFile.filename}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">Size:</span>
+                          <span className="detail-value">{formatFileSize(selectedFile.fileSize)}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">Uploaded:</span>
+                          <span className="detail-value">{formatDate(selectedFile.createdAt)}</span>
+                        </div>
+                      </div>
+
+                      {parsed.personalInfo && (
+                        <div className="detail-section">
+                          <h4>Personal & Contact Information</h4>
+                          <div className="detail-row">
+                            <span className="detail-label">Name:</span>
+                            <span className="detail-value">
+                              {parsed.personalInfo.title} {parsed.personalInfo.firstName} {parsed.personalInfo.lastName}
+                            </span>
+                          </div>
+                          <div className="detail-row">
+                            <span className="detail-label">Email:</span>
+                            <span className="detail-value">{parsed.personalInfo.email}</span>
+                          </div>
+                          <div className="detail-row">
+                            <span className="detail-label">Affiliations:</span>
+                            <span className="detail-value">{parsed.personalInfo.affiliations}</span>
+                          </div>
+                          <div className="detail-row">
+                            <span className="detail-label">Country:</span>
+                            <span className="detail-value">{parsed.personalInfo.country}</span>
+                          </div>
+                          <div className="detail-row">
+                            <span className="detail-label">Role:</span>
+                            <span className="detail-value">
+                              {[
+                                parsed.personalInfo.isCorrespondent && 'Correspondent',
+                                parsed.personalInfo.isPresenter && 'Presenter',
+                              ].filter(Boolean).join(', ') || '-'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {parsed.abstractDetails && (
+                        <div className="detail-section">
+                          <h4>Abstract Details</h4>
+                          <div className="detail-row">
+                            <span className="detail-label">Title:</span>
+                            <span className="detail-value">{parsed.abstractDetails.title}</span>
+                          </div>
+                          <div className="detail-row">
+                            <span className="detail-label">Keyword:</span>
+                            <span className="detail-value">{parsed.abstractDetails.keyword}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {parsed.presentationType && (
+                        <div className="detail-section">
+                          <h4>Presentation</h4>
+                          <div className="detail-row">
+                            <span className="detail-label">Type:</span>
+                            <span className="detail-value">{parsed.presentationType}</span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>
