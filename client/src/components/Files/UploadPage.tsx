@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { uploadFile } from '../../api/files';
@@ -9,6 +9,7 @@ import Header from '../Common/Header';
 import './UploadPage.css';
 
 const UploadPage: React.FC = () => {
+  const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
   const { showSuccess, showError } = useToast();
 
@@ -58,18 +59,44 @@ const UploadPage: React.FC = () => {
       }
 
       setProcessing(true);
+
+      // First try to login (check if user exists)
       try {
-        // Try to register first (for new users)
-        await register({ email, password });
-        showSuccess('Account created successfully');
-        // After registration, login
         await login({ email, password });
-      } catch (registerError) {
-        // If registration fails (user exists), try to login
-        try {
-          await login({ email, password });
-        } catch (loginError) {
-          showError('Login failed. Please check your email and password.');
+        // Login succeeded, continue to upload
+      } catch (loginError: any) {
+        // Login failed - check if it's because user doesn't exist or wrong password
+        const errorMessage = loginError?.response?.data?.error || loginError?.message || '';
+
+        if (errorMessage.includes('Invalid email or password')) {
+          // Could be wrong password OR user doesn't exist
+          // Try to register
+          try {
+            await register({ email, password });
+            showSuccess('Account created successfully');
+            // After registration, login
+            await login({ email, password });
+          } catch (registerError: any) {
+            const regErrorMessage = registerError?.response?.data?.error || '';
+
+            if (regErrorMessage.includes('already registered')) {
+              // User exists but wrong password - redirect to login
+              showError('Password incorrect. Redirecting to login page...');
+              setProcessing(false);
+              setTimeout(() => {
+                navigate('/login');
+              }, 1500);
+              return;
+            } else {
+              // Other registration error
+              showError(regErrorMessage || 'Registration failed');
+              setProcessing(false);
+              return;
+            }
+          }
+        } else {
+          // Other login error (e.g., account deactivated)
+          showError(errorMessage || 'Login failed');
           setProcessing(false);
           return;
         }
@@ -87,15 +114,12 @@ const UploadPage: React.FC = () => {
       });
       showSuccess('File uploaded successfully!');
 
-      // Reset form
-      setSelectedFile(null);
-      setDescription('');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      // Redirect to my files page
+      setTimeout(() => {
+        navigate('/my-files');
+      }, 1000);
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Upload failed');
-    } finally {
       setUploading(false);
       setUploadProgress(0);
     }
