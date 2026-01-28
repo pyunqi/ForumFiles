@@ -1,5 +1,5 @@
 .upload-page-container {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -39,47 +39,53 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.auth-section {
+/* Form Sections */
+.form-section {
   margin-bottom: 2rem;
   padding-bottom: 2rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.auth-section h3 {
-  font-size: 1.125rem;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.auth-hint {
-  color: #6b7280;
-  font-size: 0.875rem;
+.form-section:last-of-type {
+  border-bottom: none;
   margin-bottom: 1.5rem;
+  padding-bottom: 0;
 }
 
-.register-hint {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 1rem;
-}
-
-.register-hint a {
-  color: #2563eb;
-  text-decoration: none;
-}
-
-.register-hint a:hover {
-  text-decoration: underline;
-}
-
-.file-section h3 {
-  font-size: 1.125rem;
+.form-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
   color: #1f2937;
+  margin: 0 0 1.25rem 0;
+}
+
+.section-hint {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: -0.75rem 0 1.25rem 0;
+}
+
+/* Form Row - Two Column Layout */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form Group */
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
 }
 
 .form-group label {
@@ -90,40 +96,216 @@
   font-size: 0.875rem;
 }
 
+.form-group input[type="text"],
 .form-group input[type="email"],
 .form-group input[type="password"],
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   font-size: 1rem;
   transition: all 0.2s;
+  background-color: white;
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-group input:disabled,
-.form-group textarea:disabled {
+.form-group textarea:disabled,
+.form-group select:disabled {
   background-color: #f9fafb;
   cursor: not-allowed;
 }
 
-.form-group input[type="file"] {
-  padding: 0.5rem 0;
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
 }
 
-.selected-file-info {
-  margin-top: 0.5rem;
+/* Checkbox Row */
+.checkbox-row {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
   font-size: 0.875rem;
-  color: #059669;
+  color: #374151;
 }
 
+.checkbox-label input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.checkbox-label span {
+  user-select: none;
+}
+
+/* File Upload Section */
+.file-label {
+  display: block;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.file-drop-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.2s;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+.file-drop-zone:hover {
+  border-color: #9ca3af;
+  background: #f5f5f5;
+}
+
+.file-drop-zone.dragging {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.file-drop-zone.has-file {
+  border-color: #10b981;
+  background: #f0fdf4;
+  border-style: solid;
+}
+
+.drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.folder-icon {
+  font-size: 2rem;
+  opacity: 0.6;
+}
+
+.drop-zone-content p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.btn-browse {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: inherit;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.btn-browse:hover {
+  color: #1d4ed8;
+}
+
+.btn-browse:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Selected File Display */
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.selected-file .file-icon {
+  font-size: 1.5rem;
+}
+
+.selected-file .file-name {
+  font-weight: 500;
+  color: #1f2937;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-file .file-size {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.btn-remove-file {
+  background: #fee2e2;
+  border: none;
+  color: #dc2626;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.btn-remove-file:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+.btn-remove-file:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Agreement Section */
+.agreement-section {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.agreement-checkbox {
+  align-items: flex-start;
+}
+
+.agreement-checkbox input[type="checkbox"] {
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.agreement-checkbox span {
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+/* Upload Progress */
 .upload-progress {
   display: flex;
   align-items: center;
@@ -151,6 +333,7 @@
   min-width: 40px;
 }
 
+/* Submit Button */
 .btn-upload-submit {
   width: 100%;
   padding: 0.875rem 1.5rem;
@@ -173,6 +356,7 @@
   cursor: not-allowed;
 }
 
+/* Footer */
 .upload-page-footer {
   margin-top: 2rem;
   text-align: center;
@@ -193,4 +377,20 @@
 .btn-secondary:hover {
   background: #e5e7eb;
   border-color: #9ca3af;
+}
+
+/* Register Hint */
+.register-hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 1rem;
+}
+
+.register-hint a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.register-hint a:hover {
+  text-decoration: underline;
 }
