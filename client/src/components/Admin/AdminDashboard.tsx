@@ -15,8 +15,10 @@ import {
   getAllAdmins,
   setUserAsAdmin,
   removeAdminRole,
+  generatePublicLink,
   AdminUser,
   AdminInfo,
+  GeneratePublicLinkResponse,
 } from '../../api/admin';
 import { FileInfo } from '../../api/files';
 import { formatFileSize, formatDate } from '../../utils/formatters';
@@ -87,6 +89,13 @@ const AdminDashboard: React.FC = () => {
   const [deletingFile, setDeletingFile] = useState<number | null>(null);
   const [selectedFileForDetails, setSelectedFileForDetails] = useState<FileInfo | null>(null);
   const [exporting, setExporting] = useState(false);
+
+  // Generate link state
+  const [selectedFileForLink, setSelectedFileForLink] = useState<FileInfo | null>(null);
+  const [linkExpiresIn, setLinkExpiresIn] = useState<number>(72); // default 3 days
+  const [linkMaxDownloads, setLinkMaxDownloads] = useState<number>(0); // 0 = unlimited
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<GeneratePublicLinkResponse | null>(null);
 
   // Users state
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -301,6 +310,44 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setDeletingFile(null);
     }
+  };
+
+  const handleOpenGenerateLink = (file: FileInfo) => {
+    setSelectedFileForLink(file);
+    setLinkExpiresIn(72);
+    setLinkMaxDownloads(0);
+    setGeneratedLink(null);
+  };
+
+  const handleGenerateLink = async () => {
+    if (!selectedFileForLink) return;
+
+    setGeneratingLink(true);
+    try {
+      const response = await generatePublicLink({
+        fileId: selectedFileForLink.id,
+        expiresIn: linkExpiresIn || undefined,
+        maxDownloads: linkMaxDownloads || undefined,
+      });
+      setGeneratedLink(response);
+      showSuccess('Public link generated successfully');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to generate link');
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (generatedLink) {
+      navigator.clipboard.writeText(generatedLink.link);
+      showSuccess('Link copied to clipboard');
+    }
+  };
+
+  const handleCloseGenerateLink = () => {
+    setSelectedFileForLink(null);
+    setGeneratedLink(null);
   };
 
   const handleExportToExcel = async () => {
@@ -643,7 +690,13 @@ const AdminDashboard: React.FC = () => {
                       <div className="table-cell">{file.user?.email || 'Unknown'}</div>
                       <div className="table-cell">{formatFileSize(file.fileSize)}</div>
                       <div className="table-cell">{formatDate(file.createdAt)}</div>
-                      <div className="table-cell">
+                      <div className="table-cell actions-cell">
+                        <button
+                          onClick={() => handleOpenGenerateLink(file)}
+                          className="btn-action btn-generate-link"
+                        >
+                          Generate Link
+                        </button>
                         <button
                           onClick={() => handleDeleteUserFile(file.id)}
                           className="btn-action btn-delete"
@@ -872,6 +925,122 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Generate Link Modal */}
+      {selectedFileForLink && (
+        <div className="modal-overlay" onClick={handleCloseGenerateLink}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Generate Public Download Link</h2>
+              <button className="modal-close" onClick={handleCloseGenerateLink}>
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              {!generatedLink ? (
+                <>
+                  {/* File info */}
+                  <div className="modal-file-info">
+                    <strong>File:</strong> {selectedFileForLink.filename}
+                  </div>
+
+                  {/* Link settings */}
+                  <div className="form-group">
+                    <label>Link Expiration</label>
+                    <select
+                      value={linkExpiresIn}
+                      onChange={(e) => setLinkExpiresIn(Number(e.target.value))}
+                      className="form-select"
+                    >
+                      <option value={24}>1 Day</option>
+                      <option value={72}>3 Days</option>
+                      <option value={168}>7 Days</option>
+                      <option value={720}>30 Days</option>
+                      <option value={0}>Never Expire</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Max Downloads (0 = Unlimited)</label>
+                    <input
+                      type="number"
+                      value={linkMaxDownloads}
+                      onChange={(e) => setLinkMaxDownloads(Number(e.target.value))}
+                      min={0}
+                      placeholder="0 for unlimited"
+                    />
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      onClick={handleCloseGenerateLink}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleGenerateLink}
+                      className="btn-primary"
+                      disabled={generatingLink}
+                    >
+                      {generatingLink ? 'Generating...' : 'Generate Link'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Generated link result */}
+                  <div className="link-success">
+                    <div className="success-icon">✓</div>
+                    <h3>Link Generated Successfully!</h3>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Download Link</label>
+                    <div className="link-copy-row">
+                      <input
+                        type="text"
+                        value={generatedLink.link}
+                        readOnly
+                        className="link-input"
+                      />
+                      <button onClick={handleCopyLink} className="btn-copy">
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="link-details">
+                    <div className="link-detail-item">
+                      <span className="link-detail-label">Password:</span>
+                      <span className="link-detail-value password-value">{generatedLink.password}</span>
+                    </div>
+                    {generatedLink.expiresAt && (
+                      <div className="link-detail-item">
+                        <span className="link-detail-label">Expires:</span>
+                        <span className="link-detail-value">{formatDate(generatedLink.expiresAt)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="link-warning">
+                    Please save the password! It will not be shown again.
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      onClick={handleCloseGenerateLink}
+                      className="btn-primary"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
