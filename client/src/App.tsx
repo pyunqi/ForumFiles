@@ -8,7 +8,6 @@ import UploadPage from './components/Files/UploadPage';
 import MyFiles from './components/Files/MyFiles';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import PublicDownload from './components/Public/PublicDownload';
-import ProtectedRoute from './components/Common/ProtectedRoute';
 
 function App() {
   return (
@@ -29,15 +28,8 @@ function App() {
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/my-files" element={<MyFiles />} />
 
-            {/* Admin route - require admin login */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute adminOnly>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
+            {/* Admin route - handles its own login */}
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

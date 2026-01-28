@@ -10,7 +10,10 @@ import {
   generatePublicLink,
   uploadPublicFile,
   getPublicFiles,
-  deletePublicFile
+  deletePublicFile,
+  setUserAsAdmin,
+  removeAdminRole,
+  getAllAdmins
 } from '../controllers/adminController';
 
 const router = express.Router();
@@ -22,6 +25,11 @@ router.use(adminMiddleware);
 // User management
 router.get('/users', getAllUsers);
 router.put('/users/:id/toggle-status', toggleUserStatus);
+
+// Admin management
+router.get('/admins', getAllAdmins);
+router.put('/users/:id/set-admin', setUserAsAdmin);
+router.put('/users/:id/remove-admin', removeAdminRole);
 
 // User files management
 router.get('/files', getAllFiles);

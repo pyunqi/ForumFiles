@@ -145,3 +145,29 @@ export const getPublicFilesAdmin = async (): Promise<GetFilesResponse> => {
 export const deletePublicFile = async (fileId: number): Promise<void> => {
   await request.delete(`/admin/public-files/${fileId}`);
 };
+
+// Admin management
+export interface AdminInfo {
+  id: number;
+  email: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// Get all admins
+export const getAllAdmins = async (): Promise<{ admins: AdminInfo[] }> => {
+  const response = await request.get<{ admins: AdminInfo[] }>('/admin/admins');
+  return response.data;
+};
+
+// Set user as admin
+export const setUserAsAdmin = async (userId: number): Promise<{ message: string }> => {
+  const response = await request.put<{ message: string }>(`/admin/users/${userId}/set-admin`);
+  return response.data;
+};
+
+// Remove admin role
+export const removeAdminRole = async (userId: number): Promise<{ message: string }> => {
+  const response = await request.put<{ message: string }>(`/admin/users/${userId}/remove-admin`);
+  return response.data;
+};

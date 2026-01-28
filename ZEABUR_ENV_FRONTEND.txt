@@ -1,0 +1,13 @@
+# ===== ForumFiles 前端环境变量配置 =====
+# 复制以下内容到 Zeabur 前端服务的环境变量设置中
+
+# API 后端地址（替换为你的后端实际 URL）
+VITE_API_URL=https://your-backend-url.zeabur.app
+
+# ===== 说明 =====
+#
+# 部署后端服务后，Zeabur 会给你一个后端 URL，类似：
+# https://forumfiles-server-xxxx.zeabur.app
+#
+# 把那个 URL 填写到上面的 VITE_API_URL
+# 注意：不要在末尾加 /api

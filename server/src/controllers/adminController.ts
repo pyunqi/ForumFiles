@@ -441,3 +441,86 @@ export async function deletePublicFile(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to delete file' });
   }
 }
+
+// Set user as admin
+export async function setUserAsAdmin(req: Request, res: Response) {
+  try {
+    const userId = parseInt(req.params.id);
+
+    // Check if user exists
+    const user = await getQuery<User>(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update role to admin
+    await runQuery(
+      'UPDATE users SET role = ? WHERE id = ?',
+      ['admin', userId]
+    );
+
+    res.json({ message: `User ${user.email} is now an admin` });
+  } catch (error) {
+    console.error('Set user as admin error:', error);
+    res.status(500).json({ error: 'Failed to set user as admin' });
+  }
+}
+
+// Remove admin role from user
+export async function removeAdminRole(req: Request, res: Response) {
+  try {
+    const userId = parseInt(req.params.id);
+
+    // Prevent removing yourself as admin
+    if (req.user?.userId === userId) {
+      return res.status(400).json({ error: 'Cannot remove your own admin role' });
+    }
+
+    // Check if user exists
+    const user = await getQuery<User>(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update role to user
+    await runQuery(
+      'UPDATE users SET role = ? WHERE id = ?',
+      ['user', userId]
+    );
+
+    res.json({ message: `Admin role removed from ${user.email}` });
+  } catch (error) {
+    console.error('Remove admin role error:', error);
+    res.status(500).json({ error: 'Failed to remove admin role' });
+  }
+}
+
+// Get all admins
+export async function getAllAdmins(req: Request, res: Response) {
+  try {
+    const admins = await allQuery<User>(
+      'SELECT id, email, role, is_active, created_at FROM users WHERE role = ?',
+      ['admin']
+    );
+
+    res.json({
+      admins: admins.map(admin => ({
+        id: admin.id,
+        email: admin.email,
+        isActive: admin.is_active === 1,
+        createdAt: admin.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Get all admins error:', error);
+    res.status(500).json({ error: 'Failed to get admins' });
+  }
+}

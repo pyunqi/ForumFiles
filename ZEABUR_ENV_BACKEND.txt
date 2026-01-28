@@ -1,0 +1,39 @@
+# ===== ForumFiles 后端环境变量配置 =====
+# 复制以下内容到 Zeabur 后端服务的环境变量设置中
+
+NODE_ENV=production
+PORT=3000
+
+# JWT 配置（已生成强随机密钥）
+JWT_SECRET=a152b5658848c93c266ac29d8619efe8d5f4745cecaa3e79dd1672d79648c6fa
+
+# 数据库和文件存储（使用持久化存储卷）
+DATABASE_PATH=/data/forum_files.db
+UPLOAD_DIR=/data/uploads
+
+# SMTP 邮件配置 - Resend (使用自定义域名)
+SMTP_HOST=smtp.resend.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=resend
+SMTP_PASS=re_YtkEk6Ua_Pp1yZGfhCeVT7AMAdUS8FLLv
+SMTP_FROM=ForumFiles <noreply@iylforum.com>
+
+# CORS 配置（部署后端后，用前端 URL 替换）
+ALLOWED_ORIGINS=https://your-frontend-url.zeabur.app
+
+# 管理员账号
+ADMIN_EMAIL=pyunqi@gmail.com
+ADMIN_PASSWORD=62532356
+
+# ===== 说明 =====
+#
+# 1. SMTP 已配置完成，使用 Resend 服务（免费3000封/月）
+#
+# 2. ALLOWED_ORIGINS 需要在部署前端后更新：
+#    - 部署前端服务后，Zeabur 会给你一个前端 URL
+#    - 把那个 URL 填到 ALLOWED_ORIGINS
+#    - 例如：ALLOWED_ORIGINS=https://forumfiles-client-xxxx.zeabur.app
+#
+# 3. 安全建议：登录后修改 ADMIN_PASSWORD 为更强的密码
+#    （至少12位，包含大小写字母、数字、符号）
