@@ -57,11 +57,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem('user', JSON.stringify(response.user));
   };
 
-  // Register function
+  // Register function (now auto-logs in)
   const register = async (data: RegisterRequest) => {
-    // Register doesn't return a token, so user needs to login after
-    await authApi.register(data);
-    // Don't set token/user here - user needs to login
+    const response = await authApi.register(data);
+
+    // Registration now returns a token, so we can log in automatically
+    setToken(response.token);
+    setUser(response.user);
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
   };
 
   // Logout function

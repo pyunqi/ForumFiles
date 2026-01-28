@@ -3,14 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { uploadFile } from '../../api/files';
-import { register } from '../../api/auth';
 import { validateFileSize } from '../../utils/validators';
 import Header from '../Common/Header';
 import './UploadPage.css';
 
 const UploadPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, register } = useAuth();
   const { showSuccess, showError } = useToast();
 
   // Form state
@@ -60,47 +59,36 @@ const UploadPage: React.FC = () => {
 
       setProcessing(true);
 
-      // First try to login (check if user exists)
+      // Try to register first (will auto-login if successful)
       try {
-        await login({ email, password });
-        // Login succeeded, continue to upload
-      } catch (loginError: any) {
-        // Login failed - check if it's because user doesn't exist or wrong password
-        const errorMessage = loginError?.response?.data?.error || loginError?.message || '';
+        await register({ email, password });
+        showSuccess('Account created successfully');
+        // Registration auto-logs in now, continue to upload
+      } catch (registerError: any) {
+        const regErrorMessage = registerError?.response?.data?.error || '';
 
-        if (errorMessage.includes('Invalid email or password')) {
-          // Could be wrong password OR user doesn't exist
-          // Try to register
+        if (regErrorMessage.includes('already registered')) {
+          // User already exists, try to login
           try {
-            await register({ email, password });
-            showSuccess('Account created successfully');
-            // After registration, login
             await login({ email, password });
-          } catch (registerError: any) {
-            const regErrorMessage = registerError?.response?.data?.error || '';
-
-            if (regErrorMessage.includes('already registered')) {
-              // User exists but wrong password - redirect to login
-              showError('Password incorrect. Redirecting to login page...');
-              setProcessing(false);
-              setTimeout(() => {
-                navigate('/login');
-              }, 1500);
-              return;
-            } else {
-              // Other registration error
-              showError(regErrorMessage || 'Registration failed');
-              setProcessing(false);
-              return;
-            }
+            // Login successful, continue to upload
+          } catch (loginError: any) {
+            // Wrong password - redirect to login page
+            showError('Password incorrect. Redirecting to login page...');
+            setProcessing(false);
+            setTimeout(() => {
+              navigate('/login');
+            }, 1500);
+            return;
           }
         } else {
-          // Other login error (e.g., account deactivated)
-          showError(errorMessage || 'Login failed');
+          // Other registration error
+          showError(regErrorMessage || 'Registration failed');
           setProcessing(false);
           return;
         }
       }
+
       setProcessing(false);
     }
 

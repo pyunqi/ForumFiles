@@ -12,9 +12,9 @@ export const login = async (data: LoginRequest): Promise<AuthResponse> => {
   return response.data;
 };
 
-// Register new user
-export const register = async (data: RegisterRequest): Promise<{ message: string; user: User }> => {
-  const response = await request.post<{ message: string; user: User }>('/auth/register', data);
+// Register new user (now returns token for auto-login)
+export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
+  const response = await request.post<AuthResponse>('/auth/register', data);
   return response.data;
 };
 

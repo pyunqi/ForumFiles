@@ -57,8 +57,16 @@ export async function register(req: Request, res: Response) {
       [email]
     );
 
+    // Generate JWT token for auto-login after registration
+    const token = generateToken({
+      userId: newUser!.id,
+      email: newUser!.email,
+      role: newUser!.role
+    });
+
     res.status(201).json({
       message: 'Registration successful',
+      token,
       user: {
         id: newUser!.id,
         email: newUser!.email,
