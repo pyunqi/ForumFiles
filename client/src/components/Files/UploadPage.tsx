@@ -68,13 +68,13 @@ const UploadPage: React.FC = () => {
         const regErrorMessage = registerError?.response?.data?.error || '';
 
         if (regErrorMessage.includes('already registered')) {
-          // User already exists, try to login
+          // User already exists, try to login silently
           try {
             await login({ email, password });
             // Login successful, continue to upload
           } catch (loginError: any) {
             // Wrong password - redirect to login page
-            showError('Password incorrect. Redirecting to login page...');
+            showError('Please login first. Redirecting to login page...');
             setProcessing(false);
             setTimeout(() => {
               navigate('/login');
